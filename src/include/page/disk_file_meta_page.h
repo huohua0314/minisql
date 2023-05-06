@@ -7,6 +7,8 @@
 
 static constexpr page_id_t MAX_VALID_PAGE_ID = (PAGE_SIZE - 8) / 4 * BitmapPage<PAGE_SIZE>::GetMaxSupportedSize();
 
+static constexpr uint32_t MAX_EXTENT_SIZE = (PAGE_SIZE - 8) / 4; //max extent number allowed
+
 class DiskFileMetaPage {
  public:
   uint32_t GetExtentNums() { return num_extents_; }

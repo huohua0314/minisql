@@ -12,6 +12,8 @@
 #include "page/bitmap_page.h"
 #include "page/disk_file_meta_page.h"
 
+#define EXTENT_SIZE BITMAP_SIZE + 1
+
 /**
  * DiskManager takes care of the allocation and de allocation of pages within a database. It performs the reading and
  * writing of pages to and from disk, providing a logical file layer within the context of a database management system.

@@ -18,6 +18,7 @@ bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
       page_offset = next_free_page_;
       next_free_page_ = 0xFFFFFFFF;
     }
+
     else
     {
       for (i = 0; i < MAX_CHARS; i++) {
@@ -39,7 +40,6 @@ bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
   } else
     return false;
 }
-
 /**
  * TODO: Student Implement
  */
@@ -47,6 +47,7 @@ template <size_t PageSize>
 bool BitmapPage<PageSize>::DeAllocatePage(uint32_t page_offset) {
     int byte_index = page_offset /8;
     int bit_index = page_offset % 8;
+    
     uint32_t mask = 0xFFFFFFFF;
     if(bytes[byte_index] & (1 << bit_index))
     {
