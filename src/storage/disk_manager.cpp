@@ -76,7 +76,7 @@ page_id_t DiskManager::AllocatePage() {
   }
   //get page;
   ReadPhysicalPage(1+extent_index * EXTENT_SIZE,bitmap);
-  #ifdef ENABLE_BPM_DEBUG
+      #ifdef ENABLE_BPM_DEBUG
         LOG(INFO) << "extent_index:" << extent_index<<std::endl;
       #endif 
   if(BitMap->AllocatePage(page_offset))
@@ -85,7 +85,6 @@ page_id_t DiskManager::AllocatePage() {
     MetaPage->num_allocated_pages_++;
       #ifdef ENABLE_BPM_DEBUG
         LOG(INFO) << "MetaPage->num_allocated_pages_:" << MetaPage->num_allocated_pages_<<std::endl;
-        LOG(WARNING) <<std::hex<< (uint32_t)*(uint32_t *)(bitmap +page_offset / 8 +8) << std::endl;
       #endif 
     WritePhysicalPage(1+extent_index * EXTENT_SIZE,bitmap);
     return extent_index * BITMAP_SIZE + page_offset;
@@ -164,9 +163,8 @@ page_id_t DiskManager::MapPageId(page_id_t logical_page_id) {
     return INVALID_PAGE_ID;
   }
   else
-  #ifdef ENABLE_BPM_DEBUG
-      LOG(WARNING) << "write phy id:" <<(logical_page_id / BITMAP_SIZE) * (EXTENT_SIZE)  + (logical_page_id % BITMAP_SIZE) + 2<< std::endl;
-    
+    #ifdef ENABLE_BPM_DEBUG
+      LOG(INFO) << "MapPageId:" << logical_page_id<<"to:"<<(logical_page_id / BITMAP_SIZE) * (EXTENT_SIZE)  + (logical_page_id % BITMAP_SIZE) + 2<< std::endl;
     #endif 
   return (logical_page_id / BITMAP_SIZE) * (EXTENT_SIZE)  + (logical_page_id % BITMAP_SIZE) + 2;
 }
@@ -180,13 +178,13 @@ int DiskManager::GetFileSize(const std::string &file_name) {
 void DiskManager::ReadPhysicalPage(page_id_t physical_page_id, char *page_data) {
   #ifdef ENABLE_BPM_DEBUG
     LOG(INFO) << "read physical_page_id:" << physical_page_id<<std::endl<<std::endl;
-#endif
+  #endif
   int offset = physical_page_id * PAGE_SIZE;
   // check if read beyond file length
   if (offset >= GetFileSize(file_name_)) {
-#ifdef ENABLE_BPM_DEBUG
+  #ifdef ENABLE_BPM_DEBUG
     LOG(INFO) << "Read less than a page type1" << std::endl;
-#endif
+  #endif
     memset(page_data, 0, PAGE_SIZE);
   } else {
     // set read cursor to offset
@@ -207,7 +205,7 @@ void DiskManager::WritePhysicalPage(page_id_t physical_page_id, const char *page
   size_t offset = static_cast<size_t>(physical_page_id) * PAGE_SIZE;
    #ifdef ENABLE_BPM_DEBUG
     LOG(INFO) << "write physical_page_id:" << physical_page_id<<std::endl<<std::endl;
-#endif
+  #endif
   // set write cursor to offset
   db_io_.seekp(offset);
   if(db_io_.eof())

@@ -113,7 +113,7 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
 
     page_id = disk_manager_->AllocatePage();
     #ifdef ENABLE_BPM_DEBUG
-      LOG(INFO) <<"page_id:" <<page_id << endl;
+      LOG(INFO) <<"get from freelist page_id:" <<page_id << endl;
     #endif 
     disk_manager_->ReadPage(page_id,pages_[new_frame].data_);
     pages_[new_frame].page_id_ = page_id;
@@ -134,7 +134,6 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
           }
         }
         page_id = disk_manager_->AllocatePage();
-        LOG(INFO) << "page_id:" << page_id <<endl;
         page_table_.erase(pages_[new_frame].page_id_);
         pages_[new_frame].ResetMemory();
 

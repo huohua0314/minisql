@@ -37,9 +37,9 @@ bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
     #ifdef ENABLE_BPM_DEBUG
         LOG(INFO) << "page_allocated:" << page_allocated_<< std::endl;
         LOG(INFO) << "page_offset:" << page_offset<< std::endl;
+        LOG(INFO) << "allocate pageoffset is:" << page_offset << std::endl;
     #endif 
       bytes[byte_index] = bytes[byte_index] | (1 << bit_index);
-      LOG(WARNING) << "bytes:" <<std::hex<< (uint32_t)bytes[byte_index]<< std::endl;
     // std::cout << "MAX_CHARS:" << MAX_CHARS <<std::endl;
     // std::cout << "i:" << i << " j:" << j <<" allocated:"<<page_allocated_<<std::endl;
     // std::cout << "byte1:" << (int)bytes[i]  << std::endl;
@@ -63,6 +63,9 @@ bool BitmapPage<PageSize>::DeAllocatePage(uint32_t page_offset) {
       bytes[byte_index] &= mask; 
       page_allocated_--;
       next_free_page_ = page_offset;
+      #ifdef ENABLE_BPM_DEBUG
+        LOG(INFO) << "Deallocate pageoffset is:" << page_offset << std::endl;
+      #endif 
       return true;
     }
     else

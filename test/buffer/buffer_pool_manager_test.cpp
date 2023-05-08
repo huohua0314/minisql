@@ -50,6 +50,10 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
   for (size_t i = buffer_pool_size; i < buffer_pool_size * 2; ++i) {
     EXPECT_EQ(nullptr, bpm->NewPage(page_id_temp));
   }
+  bpm->UnpinPage(7,1);
+  ASSERT_TRUE(bpm->DeletePage(7));
+  EXPECT_NE(nullptr, bpm->NewPage(page_id_temp));
+  EXPECT_EQ(7, page_id_temp);
 
   // Scenario: After unpinning pages {0, 1, 2, 3, 4} we should be able to create 5 new pages
   for (int i = 0; i < 5; ++i) {
