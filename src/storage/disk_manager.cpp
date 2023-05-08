@@ -76,11 +76,17 @@ page_id_t DiskManager::AllocatePage() {
   }
   //get page;
   ReadPhysicalPage(1+extent_index * EXTENT_SIZE,bitmap);
-
+  #ifdef ENABLE_BPM_DEBUG
+        LOG(INFO) << "extent_index:" << extent_index<<std::endl;
+      #endif 
   if(BitMap->AllocatePage(page_offset))
   {
     MetaPage->extent_used_page_[extent_index] ++ ;
     MetaPage->num_allocated_pages_++;
+      #ifdef ENABLE_BPM_DEBUG
+        LOG(INFO) << "MetaPage->num_allocated_pages_:" << MetaPage->num_allocated_pages_<<std::endl;
+        LOG(WARNING) <<std::hex<< (uint32_t)*(uint32_t *)(bitmap +page_offset / 8 +8) << std::endl;
+      #endif 
     WritePhysicalPage(1+extent_index * EXTENT_SIZE,bitmap);
     return extent_index * BITMAP_SIZE + page_offset;
   }
@@ -140,7 +146,7 @@ bool DiskManager::IsPageFree(page_id_t logical_page_id) {
   char bitmap[PAGE_SIZE];
   BitmapPage<PAGE_SIZE> * BitMap = reinterpret_cast<BitmapPage<PAGE_SIZE> *> (bitmap);
   ReadPhysicalPage(1+extent_index * EXTENT_SIZE,bitmap);
-
+  // std::cout << bitmap << std::endl;
   return BitMap->IsPageFree(page_offset);
 
 }
@@ -158,7 +164,11 @@ page_id_t DiskManager::MapPageId(page_id_t logical_page_id) {
     return INVALID_PAGE_ID;
   }
   else
-  return (logical_page_id / BITMAP_SIZE) * (EXTENT_SIZE)  + (logical_page_id % BITMAP_SIZE) + 1;
+  #ifdef ENABLE_BPM_DEBUG
+      LOG(WARNING) << "write phy id:" <<(logical_page_id / BITMAP_SIZE) * (EXTENT_SIZE)  + (logical_page_id % BITMAP_SIZE) + 2<< std::endl;
+    
+    #endif 
+  return (logical_page_id / BITMAP_SIZE) * (EXTENT_SIZE)  + (logical_page_id % BITMAP_SIZE) + 2;
 }
 
 int DiskManager::GetFileSize(const std::string &file_name) {
@@ -168,11 +178,14 @@ int DiskManager::GetFileSize(const std::string &file_name) {
 }
 
 void DiskManager::ReadPhysicalPage(page_id_t physical_page_id, char *page_data) {
+  #ifdef ENABLE_BPM_DEBUG
+    LOG(INFO) << "read physical_page_id:" << physical_page_id<<std::endl<<std::endl;
+#endif
   int offset = physical_page_id * PAGE_SIZE;
   // check if read beyond file length
   if (offset >= GetFileSize(file_name_)) {
 #ifdef ENABLE_BPM_DEBUG
-    LOG(INFO) << "Read less than a page" << std::endl;
+    LOG(INFO) << "Read less than a page type1" << std::endl;
 #endif
     memset(page_data, 0, PAGE_SIZE);
   } else {
@@ -183,7 +196,7 @@ void DiskManager::ReadPhysicalPage(page_id_t physical_page_id, char *page_data) 
     int read_count = db_io_.gcount();
     if (read_count < PAGE_SIZE) {
 #ifdef ENABLE_BPM_DEBUG
-      LOG(INFO) << "Read less than a page" << std::endl;
+      LOG(INFO) << "Read less than a page type2" << std::endl;
 #endif
       memset(page_data + read_count, 0, PAGE_SIZE - read_count);
     }
@@ -192,8 +205,15 @@ void DiskManager::ReadPhysicalPage(page_id_t physical_page_id, char *page_data) 
 
 void DiskManager::WritePhysicalPage(page_id_t physical_page_id, const char *page_data) {
   size_t offset = static_cast<size_t>(physical_page_id) * PAGE_SIZE;
+   #ifdef ENABLE_BPM_DEBUG
+    LOG(INFO) << "write physical_page_id:" << physical_page_id<<std::endl<<std::endl;
+#endif
   // set write cursor to offset
   db_io_.seekp(offset);
+  if(db_io_.eof())
+  {
+    LOG(ERROR) << "large than offset" << std::endl;
+  }
   db_io_.write(page_data, PAGE_SIZE);
   // check for I/O error
   if (db_io_.bad()) {

@@ -4,6 +4,7 @@
 #include <list>
 #include <mutex>
 #include <unordered_set>
+#include <unordered_map>
 #include <vector>
 
 #include "buffer/replacer.h"
@@ -33,9 +34,18 @@ class LRUReplacer : public Replacer {
 
   void Unpin(frame_id_t frame_id) override;
 
+  void Remove(frame_id_t frame_id)
+  {
+    lru_list.remove(frame_id);
+  }
+
   size_t Size() override;
 
 private:
+  unordered_set<frame_id_t> pin_pages;
+  unordered_set<frame_id_t> lru_list_pages;
+  list<frame_id_t> lru_list;
+  int num_pages_;
   // add your own private member variables here
 };
 

@@ -1,6 +1,7 @@
 #ifndef MINISQL_BITMAP_PAGE_H
 #define MINISQL_BITMAP_PAGE_H
 
+#define ENABLE_BPM_DEBUG debug
 #include <bitset>
 
 #include "common/config.h"

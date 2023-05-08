@@ -9,6 +9,9 @@ template <size_t PageSize>
 bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
   int byte_index,bit_index;
   int i,j;
+  #ifdef ENABLE_BPM_DEBUG
+        LOG(INFO) << "page_allocated:" << page_allocated_<< std::endl;
+    #endif 
   if (page_allocated_ < 8 * MAX_CHARS) {
     page_allocated_ ++ ;
     if(next_free_page_!=0xFFFFFFFF)
@@ -30,8 +33,13 @@ bool BitmapPage<PageSize>::AllocatePage(uint32_t &page_offset) {
       byte_index = i;
       bit_index = j;
       page_offset = 8 * i + j;
-    }  
+    } 
+    #ifdef ENABLE_BPM_DEBUG
+        LOG(INFO) << "page_allocated:" << page_allocated_<< std::endl;
+        LOG(INFO) << "page_offset:" << page_offset<< std::endl;
+    #endif 
       bytes[byte_index] = bytes[byte_index] | (1 << bit_index);
+      LOG(WARNING) << "bytes:" <<std::hex<< (uint32_t)bytes[byte_index]<< std::endl;
     // std::cout << "MAX_CHARS:" << MAX_CHARS <<std::endl;
     // std::cout << "i:" << i << " j:" << j <<" allocated:"<<page_allocated_<<std::endl;
     // std::cout << "byte1:" << (int)bytes[i]  << std::endl;
@@ -70,7 +78,7 @@ bool BitmapPage<PageSize>::IsPageFree(uint32_t page_offset) const {
     int byte_index = page_offset /8;
     int bit_index = page_offset % 8;
     int test = bytes[byte_index] & (1<<bit_index);
-    if(test == 1)
+    if(test ) //if page_bit == 1;
       return false;
     else
       return true;

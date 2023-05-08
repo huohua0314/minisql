@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 
+
 TEST(BufferPoolManagerTest, BinaryDataTest) {
   const std::string db_name = "bpm_test.db";
   const size_t buffer_pool_size = 10;
@@ -55,6 +56,7 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
     EXPECT_EQ(true, bpm->UnpinPage(i, true));
     EXPECT_TRUE(bpm->FlushPage(i));
   }
+  cout <<"aaa"<<endl;
   for (int i = 0; i < 5; ++i) {
     EXPECT_NE(nullptr, bpm->NewPage(page_id_temp));
     EXPECT_EQ(buffer_pool_size + i, page_id_temp);
