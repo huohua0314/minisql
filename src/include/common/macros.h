@@ -1,6 +1,6 @@
 #ifndef MINISQL_MACROS_H
 #define MINISQL_MACROS_H
-
+#define RECORD_DEBUG RECORD_DEBUGA
 #include <cassert>
 
 #define ASSERT(expr, message) assert((expr) && (message))

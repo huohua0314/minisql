@@ -83,7 +83,7 @@ class Row {
    */
   uint32_t SerializeTo(char *buf, Schema *schema) const;
 
-  uint32_t DeserializeFrom(char *buf, Schema *schema);
+  uint32_t DeserializeFrom(char *buf ,Schema *schema);
 
   /**
    * For empty row, return 0

@@ -101,3 +101,44 @@ TEST(TupleTest, RowTest) {
   ASSERT_TRUE(table_page.MarkDelete(row.GetRowId(), nullptr, nullptr, nullptr));
   table_page.ApplyDelete(row.GetRowId(), nullptr, nullptr);
 }
+
+//Column(std::string column_name, TypeId type, uint32_t index, bool nullable, bool unique);
+//Column(std::string column_name, TypeId type, uint32_t length, uint32_t index, bool nullable, bool unique);
+Column colTest[] =
+{
+  Column("minisql",TypeId::kTypeInt,5,true,true),
+  Column("miniChar",TypeId::kTypeChar,10,6,true,true),
+  Column("miniFloat",TypeId::kTypeFloat,3,false,false)
+};
+TEST(TupleTest, ColandSchemaTest)
+{
+  char buffer[PAGE_SIZE];
+  memset(buffer, 0, sizeof(buffer));
+  char *p = buffer;
+  for(int i=0;i<3;i++)
+  {
+    p += colTest[i].SerializeTo(p);
+  }
+  p = buffer;
+  Column * test;
+  p += test->DeserializeFrom(p,test);
+  std::cout << "tableindex:" << test->GetTableInd() << std::endl;
+  LOG(INFO) << test->GetSerializedSize() << std::endl;
+  ASSERT_FALSE(test->GetName().compare("minisql"));
+  ASSERT_TRUE(test->GetTableInd()==5);
+  ASSERT_TRUE(test->IsUnique());
+  ASSERT_TRUE(test->IsNullable());
+  p += test->DeserializeFrom(p,test);
+  LOG(INFO) << test->GetSerializedSize() << std::endl;
+  ASSERT_FALSE(test->GetName().compare("miniChar"));
+  ASSERT_TRUE(test->GetLength()==10);
+  ASSERT_TRUE(test->GetTableInd()==6);
+  ASSERT_TRUE(test->IsUnique());
+  ASSERT_TRUE(test->IsNullable());
+  p += test->DeserializeFrom(p,test);
+  LOG(INFO) << test->GetSerializedSize() << std::endl;
+  ASSERT_FALSE(test->GetName().compare("miniFloat"));
+  ASSERT_TRUE(test->GetTableInd()==3);
+  ASSERT_FALSE(test->IsUnique());
+  ASSERT_FALSE(test->IsNullable());
+}
