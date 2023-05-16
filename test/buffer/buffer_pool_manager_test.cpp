@@ -53,6 +53,7 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
   bpm->UnpinPage(7,1);
   ASSERT_TRUE(bpm->DeletePage(7));
   EXPECT_NE(nullptr, bpm->NewPage(page_id_temp));
+  cout << page_id_temp << endl;
   EXPECT_EQ(7, page_id_temp);
 
   // Scenario: After unpinning pages {0, 1, 2, 3, 4} we should be able to create 5 new pages
@@ -60,7 +61,6 @@ TEST(BufferPoolManagerTest, BinaryDataTest) {
     EXPECT_EQ(true, bpm->UnpinPage(i, true));
     EXPECT_TRUE(bpm->FlushPage(i));
   }
-  cout <<"aaa"<<endl;
   for (int i = 0; i < 5; ++i) {
     EXPECT_NE(nullptr, bpm->NewPage(page_id_temp));
     EXPECT_EQ(buffer_pool_size + i, page_id_temp);

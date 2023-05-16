@@ -17,6 +17,7 @@ BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager
 
 BufferPoolManager::~BufferPoolManager() {
   for (auto page : page_table_) {
+    LOG(WARNING) << page.first <<endl;
     FlushPage(page.first);
   }
   delete[] pages_;
@@ -34,6 +35,9 @@ Page *BufferPoolManager::FetchPage(page_id_t page_id) {
   // 2.     If R is dirty, write it back to the disk.
   // 3.     Delete R from the page table and insert P.
   // 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
+  #ifdef ENABLE_BPM_DEBUG
+      LOG(INFO) <<"start fetch page:" <<page_id << endl;
+    #endif 
   if(page_table_.count(page_id) == 1)
   {
     replacer_->Pin(page_table_[page_id]);
@@ -102,16 +106,22 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
   // 2.   Pick a victim page P from either the free list or the replacer. Always pick from the free list first.
   // 3.   Update P's metadata, zero out memory and add P to the page table.
   // 4.   Set the page ID output parameter. Return a pointer to P.
+  #ifdef ENABLE_BPM_DEBUG
+      LOG(INFO) <<"start get new Page" <<page_id << endl;
+    #endif 
   if(free_list_.size() > 0)
   {
+    
     int new_frame = *free_list_.begin();
     free_list_.pop_front();
-    pair<page_id_t,frame_id_t> p1(page_id,new_frame);
-    page_table_.insert(p1);
+    
     replacer_->Unpin(new_frame); // managered by lru
     replacer_->Pin(new_frame);
 
     page_id = disk_manager_->AllocatePage();
+    pair<page_id_t,frame_id_t> p1(page_id,new_frame);
+    page_table_.insert(p1);
+    LOG(WARNING) << page_id << endl;
     #ifdef ENABLE_BPM_DEBUG
       LOG(INFO) <<"get from freelist page_id:" <<page_id << endl;
     #endif 
@@ -134,6 +144,9 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
           }
         }
         page_id = disk_manager_->AllocatePage();
+        #ifdef ENABLE_BPM_DEBUG
+        LOG(INFO) <<"get from victim page id:" <<page_id << endl;
+        #endif 
         page_table_.erase(pages_[new_frame].page_id_);
         pages_[new_frame].ResetMemory();
 
@@ -151,6 +164,7 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
     else
     {
       LOG(WARNING) <<"ALL pages in buffer are pinned" << endl;
+      page_id = INVALID_PAGE_ID;
     }
   }
   return nullptr;
@@ -165,6 +179,9 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
   // 1.   If P does not exist, return true.
   // 2.   If P exists, but has a non-zero pin-count, return false. Someone is using the page.
   // 3.   Otherwise, P can be deleted. Remove P from the page table, reset its metadata and return it to the free list.
+  #ifdef ENABLE_BPM_DEBUG
+      LOG(INFO) <<"start delete page id:" <<page_id << endl;
+    #endif 
   if(page_table_.count(page_id) == 0) //no such page
   {
     #ifdef ENABLE_BPM_DEBUG
@@ -201,6 +218,10 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
  * TODO: Student Implement
  */
 bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty) {
+  if(page_id == INVALID_PAGE_ID)
+  {
+    ASSERT(false,"Unpin INVAILD_PAGE ID");
+  }
   if(page_table_.count(page_id) == 1) 
   {
     if(pages_[page_table_[page_id]].pin_count_>0)

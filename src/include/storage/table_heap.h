@@ -47,7 +47,7 @@ class TableHeap {
    * @param[in] txn Transaction performing the update
    * @return true is update is successful.
    */
-  bool UpdateTuple(const Row &row, const RowId &rid, Transaction *txn);
+  bool UpdateTuple( Row &row, const RowId &rid, Transaction *txn);
 
   /**
    * Called on Commit/Abort to actually delete a tuple or rollback an insert.
@@ -113,7 +113,10 @@ private:
           schema_(schema),
           log_manager_(log_manager),
           lock_manager_(lock_manager) {
-    ASSERT(false, "Not implemented yet.");
+          auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->NewPage(first_page_id_));
+          LOG(INFO) << "first_page_id_id" << first_page_id_<<std::endl;
+          ASSERT(first_page_id_!=INVALID_PAGE_ID,"first page get false");
+          page->Init(first_page_id_,INVALID_PAGE_ID,log_manager_,nullptr);
   };
 
   explicit TableHeap(BufferPoolManager *buffer_pool_manager, page_id_t first_page_id, Schema *schema,

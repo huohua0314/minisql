@@ -43,11 +43,21 @@ TEST(TableHeapTest, TableHeapSampleTest) {
     }
     delete[] characters;
   }
-
+  //   char *characters = new char[90];
+  // Fields *fields =
+  //       new Fields{Field(TypeId::kTypeInt, 10), Field(TypeId::kTypeChar, const_cast<char *>(characters), 90, true),
+  //                  Field(TypeId::kTypeFloat, RandomUtils::RandomFloat(-999.f, 999.f))};
+  // Row row(*fields);
+  // RowId temp(2,4);
+  // RowId temp2(2,5);
+  // table_heap->UpdateTuple(row,temp,nullptr);
+  // table_heap->ApplyDelete(temp2,nullptr);
+  // table_heap->UpdateTuple(row,temp2,nullptr);
   ASSERT_EQ(row_nums, row_values.size());
   ASSERT_EQ(row_nums, size);
   for (auto row_kv : row_values) {
     size--;
+    std::cout << "size:" <<size<<std::endl;
     Row row(RowId(row_kv.first));
     table_heap->GetTuple(&row, nullptr);
     ASSERT_EQ(schema.get()->GetColumnCount(), row.GetFields().size());
@@ -56,6 +66,17 @@ TEST(TableHeapTest, TableHeapSampleTest) {
     }
     // free spaces
     delete row_kv.second;
+  }
+  TableIterator it = table_heap->Begin(nullptr);
+  LOG(INFO) <<"first page:" <<table_heap->GetFirstPageId() << " it:" << it.rowId.GetPageId()<<std::endl;
+  for(;it!=table_heap->End();it++)
+  {
+      LOG(INFO)<<it.rowId.GetPageId()<<std::endl;
+      for(auto its:(*it).GetFields())
+      {
+        if(its->type_id_== kTypeChar)
+        cout << its->value_.chars_ << std::endl;
+      }
   }
   ASSERT_EQ(size, 0);
 }

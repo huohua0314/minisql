@@ -87,6 +87,9 @@ page_id_t DiskManager::AllocatePage() {
         LOG(INFO) << "MetaPage->num_allocated_pages_:" << MetaPage->num_allocated_pages_<<std::endl;
       #endif 
     WritePhysicalPage(1+extent_index * EXTENT_SIZE,bitmap);
+    memset(bitmap,0,PAGE_SIZE);
+    // std::cout << "test";
+    WritePhysicalPage(MapPageId(extent_index * BITMAP_SIZE + page_offset),bitmap);
     return extent_index * BITMAP_SIZE + page_offset;
   }
   else

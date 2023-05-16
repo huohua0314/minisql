@@ -61,7 +61,7 @@ bool TablePage::MarkDelete(const RowId &rid, Transaction *txn, LockManager *lock
   return true;
 }
 
-bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Transaction *txn,
+int TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Transaction *txn,
                             LockManager *lock_manager, LogManager *log_manager) {
   ASSERT(old_row != nullptr && old_row->GetRowId().Get() != INVALID_ROWID.Get(), "invalid old row.");
   uint32_t serialized_size = new_row.GetSerializedSize(schema);
@@ -69,16 +69,25 @@ bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Tr
   uint32_t slot_num = old_row->GetRowId().GetSlotNum();
   // If the slot number is invalid, abort.
   if (slot_num >= GetTupleCount()) {
-    return false;
+    #ifdef RECORD_DEBUG
+      LOG(WARNING) << "UpdateTuple solt_num large than TupleCount" << std::endl;
+    #endif
+    return 0;
   }
   uint32_t tuple_size = GetTupleSize(slot_num);
   // If the tuple is deleted, abort.
   if (IsDeleted(tuple_size)) {
-    return false;
+    #ifdef RECORD_DEBUG
+      LOG(WARNING) << "UpdateTuble already been removed" << std::endl;
+    #endif
+    return -1;
   }
   // If there is not enough space to update, we need to update via delete followed by an insert (not enough space).
   if (GetFreeSpaceRemaining() + tuple_size < serialized_size) {
-    return false;
+    #ifdef RECORD_DEBUG
+      LOG(WARNING) << "UpdateTuble out of remain size" << std::endl;
+    #endif
+    return 0;
   }
   // Copy out the old value.
   uint32_t tuple_offset = GetTupleOffsetAtSlot(slot_num);
@@ -99,7 +108,7 @@ bool TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Tr
       SetTupleOffsetAtSlot(i, tuple_offset_i + tuple_size - new_row.GetSerializedSize(schema));
     }
   }
-  return true;
+  return 1;
 }
 
 void TablePage::ApplyDelete(const RowId &rid, Transaction *txn, LogManager *log_manager) {
@@ -145,6 +154,10 @@ void TablePage::RollbackDelete(const RowId &rid, Transaction *txn, LogManager *l
 bool TablePage::GetTuple(Row *row, Schema *schema, Transaction *txn, LockManager *lock_manager) {
   ASSERT(row != nullptr && row->GetRowId().Get() != INVALID_ROWID.Get(), "Invalid row.");
   // Get the current slot number.
+  #ifdef RECORD_DEBUG
+  LOG(INFO) << "Begin getuple page_id:" << row->GetRowId().GetPageId() << " solt num:" << row->GetRowId().GetSlotNum() <<std::endl
+  <<"page solt num:"<<GetTupleCount()<<" tuple size:"<<GetTupleSize(row->GetRowId().GetSlotNum())<<std::endl;
+  #endif;
   uint32_t slot_num = row->GetRowId().GetSlotNum();
   // If somehow we have more slots than tuples, abort the transaction.
   if (slot_num >= GetTupleCount()) {
