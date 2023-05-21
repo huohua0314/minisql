@@ -21,7 +21,14 @@
  * next page id and set max size
  * 未初始化next_page_id
  */
-void LeafPage::Init(page_id_t page_id, page_id_t parent_id, int key_size, int max_size) {}
+void LeafPage::Init(page_id_t page_id, page_id_t parent_id, int key_size, int max_size) {
+  SetPageId(page_id);
+  SetKeySize(key_size);
+  SetPageType(IndexPageType::LEAF_PAGE);
+  SetParentPageId(parent_id);
+  SetSize(0);
+  SetMaxSize(max_size);
+}
 
 /**
  * Helper methods to set/get next page id
@@ -46,7 +53,13 @@ void LeafPage::SetNextPageId(page_id_t next_page_id) {
  * 二分查找
  */
 int LeafPage::KeyIndex(const GenericKey *key, const KeyManager &KM) {
-  return 0;
+  for(int i=0;i<GetSize();i++)
+  {
+    if(KM.CompareKeys(KeyAt(i),key)>0)
+      return i;
+  }
+  LOG(WARNING) << "could fund index" <<std::endl;
+  return -1;
 }
 
 /*
@@ -94,7 +107,33 @@ std::pair<GenericKey *, RowId> LeafPage::GetItem(int index) {
  * @return page size after insertion
  */
 int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) {
-  return 0;
+  int i;
+  for(i=0;i<GetSize();i++)
+  {
+    if(KM.CompareKeys(key,KeyAt(i))>0)
+    {
+      continue;
+    }
+    else if(KM.CompareKeys(Key,KeyAt(i)) < 0)
+    {
+      break;
+    }
+    else
+    {
+      LOG(WARNING) << "insert same value" << std::endl;
+      return GetSize();
+    }
+  }
+  int index = i;
+  for(;i<GetSize();i++)
+  {
+    SetValueAt(i+1,ValueAt(i));
+    SetKeyAt(i+1,KeyAt(i));
+  }
+  SetValueAt(index,value);
+  SetKeyAt(index,key);
+  IncreaseSize(1);
+  return GetSize();
 }
 
 /*****************************************************************************
@@ -104,24 +143,40 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
  * Remove half of key & value pairs from this page to "recipient" page
  */
 void LeafPage::MoveHalfTo(LeafPage *recipient) {
+  int size = GetSize() /2;
+  int remain_size = GetSize() - size;
+  recipient -> CopyNFrom(PairPtrAt(remain_size),size);
+  SetSize(remain_size);
 }
 
 /*
  * Copy starting from items, and copy {size} number of elements into me.
  */
 void LeafPage::CopyNFrom(void *src, int size) {
+  memcpy(pairs_off + GetSize() * pair_size,src,size * val_off);
+  IncreaseSize(size);
 }
 
 /*****************************************************************************
  * LOOKUP
  *****************************************************************************/
 /*
+  TODO: binary search
  * For the given key, check to see whether it exists in the leaf page. If it
  * does, then store its corresponding value in input "value" and return true.
  * If the key does not exist, then return false
  */
 bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM) {
-  return false;
+  for(int i=0;i<GetSize();i++)
+  {
+    if(KM.CompareKeys(key,KeyAt(i))==0)
+    {
+      value = ValueAt(i);
+      return true;
+    }
+  }
+  else
+    return false;
 }
 
 /*****************************************************************************
@@ -134,7 +189,16 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
  * @return  page size after deletion
  */
 int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM) {
-  return -1;
+  int pos = KeyIndex(key,KM);
+  if(pos == -1) 
+    return GetSize();
+  for(int i=pos+1;i<GetSize();i++)
+  {
+    SetValueAt(i-1,ValueAt(i));
+    SetKeyAt(i-1;KeyAt(i));
+  }
+  IncreaseSize(-1);
+  return GetSize();
 }
 
 /*****************************************************************************
@@ -145,6 +209,11 @@ int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM)
  * to update the next_page id in the sibling page
  */
 void LeafPage::MoveAllTo(LeafPage *recipient) {
+  for(int i=0;i<GetSize();i++)
+  {
+    recipient->CopyLastFrom(KeyAt(i),ValueAt(i));
+  }
+  SetSize(0);
 }
 
 /*****************************************************************************
@@ -155,18 +224,30 @@ void LeafPage::MoveAllTo(LeafPage *recipient) {
  *
  */
 void LeafPage::MoveFirstToEndOf(LeafPage *recipient) {
+  recipient->CopyLastFrom(KeyAt(0),ValueAt(0));
+  for(int i=0;i<GetSize();i++)
+  {
+    SetKeyAt(i,KeyAt(i+1));
+    SetValueAt(i,ValueAt(i+1));
+  }
+  IncreaseSize(-1);
 }
 
 /*
  * Copy the item into the end of my item list. (Append item to my array)
  */
 void LeafPage::CopyLastFrom(GenericKey *key, const RowId value) {
+  SetValueAt(GetSize(),value);
+  SetValueAt(GetSize(),key);
+  IncreaseSize(1);
 }
 
 /*
  * Remove the last key & value pair from this page to "recipient" page.
  */
 void LeafPage::MoveLastToFrontOf(LeafPage *recipient) {
+  recipient->CopyFirstFrom(KeyAt(GetSize()-1),ValueAt(GetSize()-1));
+  IncreaseSize(-1);
 }
 
 /*
@@ -174,4 +255,12 @@ void LeafPage::MoveLastToFrontOf(LeafPage *recipient) {
  *
  */
 void LeafPage::CopyFirstFrom(GenericKey *key, const RowId value) {
+  for(int i=0;i<GetSize();i++)
+  {
+    SetValueAt(i+1,ValueAt(i));
+    SetKeyAt(i+1,SetKeyAt(i));
+  }
+  SetValueAt(0,value);
+  SetKeyAt(0,Key);
+  IncreaseSize(1);
 }
