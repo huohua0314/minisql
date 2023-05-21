@@ -28,7 +28,7 @@ public:
     return !(*this == itr);
   }
 
-  const Row &operator*();
+  Row &operator*();
 
   Row *operator->();
 

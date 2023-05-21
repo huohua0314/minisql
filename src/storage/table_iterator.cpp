@@ -51,7 +51,7 @@ TableIterator::~TableIterator() {
 
 
 
-const Row &TableIterator::operator*() {
+ Row &TableIterator::operator*() {
   return row;
 }
 
