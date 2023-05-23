@@ -51,6 +51,7 @@ class BPlusTreeLeafPage : public BPlusTreePage {
   void SetValueAt(int index, RowId value);
 
   int KeyIndex(const GenericKey *key, const KeyManager &comparator);
+  int findIndex(const GenericKey *key, const KeyManager &comparator);
 
   void *PairPtrAt(int index);
 

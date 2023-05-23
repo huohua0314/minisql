@@ -102,6 +102,7 @@ class BPlusTree {
   void ToString(BPlusTreePage *page, BufferPoolManager *bpm) const;
 
   // member variable
+  public:
   index_id_t index_id_;
   page_id_t root_page_id_{INVALID_PAGE_ID};
   BufferPoolManager *buffer_pool_manager_;

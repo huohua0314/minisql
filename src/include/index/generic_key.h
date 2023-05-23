@@ -8,6 +8,7 @@
 
 class GenericKey {
   friend class KeyManager;
+  public: //TODO:remove
   char data[0];
 };
 

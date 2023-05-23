@@ -15,14 +15,14 @@ bool BPlusTreePage::IsLeafPage() const {
  * TODO: Student Implement
  */
 bool BPlusTreePage::IsRootPage() const {
-  return page_id_ == INVALID_PAGE_ID;
+  return parent_page_id_ == INVALID_PAGE_ID;
 }
 
 /**
  * TODO: Student Implement
  */
 void BPlusTreePage::SetPageType(IndexPageType page_type) {
-  page_type_ = page_type_;
+  page_type_ = page_type;
 }
 
 int BPlusTreePage::GetKeySize() const {

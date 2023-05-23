@@ -108,24 +108,35 @@ std::pair<GenericKey *, RowId> LeafPage::GetItem(int index) {
  */
 int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) {
   int i;
+  #ifdef BTREE_DEBUG
+    LOG(INFO) << "begin insert into LeafPage------------" <<endl; 
+    cout <<" RowId PageId:" << value.GetPageId() <<" SoltNum:"<<value.GetSlotNum() <<endl;
+  #endif
+  if(GetSize()==GetMaxSize())
+  {
+    LOG(WARNING) << "leaf page full, need spilt" << std::endl;
+  }
   for(i=0;i<GetSize();i++)
   {
     if(KM.CompareKeys(key,KeyAt(i))>0)
     {
       continue;
     }
-    else if(KM.CompareKeys(Key,KeyAt(i)) < 0)
+    else if(KM.CompareKeys(key,KeyAt(i)) < 0)
     {
       break;
     }
     else
     {
-      LOG(WARNING) << "insert same value" << std::endl;
+      LOG(WARNING) << "insert same value end of insert into leafpage--------" << std::endl;
       return GetSize();
     }
   }
   int index = i;
-  for(;i<GetSize();i++)
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "index in insert leaf:" << index << std::endl;
+  #endif
+  for(i = GetSize()-1;i>=index;i--)
   {
     SetValueAt(i+1,ValueAt(i));
     SetKeyAt(i+1,KeyAt(i));
@@ -133,6 +144,9 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
   SetValueAt(index,value);
   SetKeyAt(index,key);
   IncreaseSize(1);
+  #ifdef BTREE_DEBUG
+    LOG(INFO) << "end insert into LeafPage----------" <<endl; 
+  #endif
   return GetSize();
 }
 
@@ -167,15 +181,23 @@ void LeafPage::CopyNFrom(void *src, int size) {
  * If the key does not exist, then return false
  */
 bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM) {
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "begin loop up in leaf, size is:" << GetSize() << std::endl;
+  #endif
   for(int i=0;i<GetSize();i++)
   {
     if(KM.CompareKeys(key,KeyAt(i))==0)
     {
       value = ValueAt(i);
+      #ifdef BTREE_DEBUG
+      LOG(WARNING) << "end loop up in leaf" << std::endl;
+      #endif
       return true;
     }
   }
-  else
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "end loop up in leaf" << std::endl;
+  #endif
     return false;
 }
 
@@ -188,14 +210,32 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
  * NOTE: store key&value pair continuously after deletion
  * @return  page size after deletion
  */
+
+int LeafPage::findIndex(const GenericKey *key, const KeyManager &KM)
+{
+   #ifdef BTREE_DEBUG
+      LOG(WARNING) << "begin findIndex in leaf" << std::endl;
+    #endif
+    for(int i=0;i<GetSize();i++) 
+    {
+      if(KM.CompareKeys(key,KeyAt(i))==0)
+    {
+      #ifdef BTREE_DEBUG
+      LOG(WARNING) << "end loop up in leaf" << std::endl;
+      #endif
+      return i;
+    }
+    }
+    return -1;
+}
 int LeafPage::RemoveAndDeleteRecord(const GenericKey *key, const KeyManager &KM) {
-  int pos = KeyIndex(key,KM);
+  int pos = findIndex(key,KM);
   if(pos == -1) 
     return GetSize();
   for(int i=pos+1;i<GetSize();i++)
   {
     SetValueAt(i-1,ValueAt(i));
-    SetKeyAt(i-1;KeyAt(i));
+    SetKeyAt(i-1,KeyAt(i));
   }
   IncreaseSize(-1);
   return GetSize();
@@ -238,7 +278,7 @@ void LeafPage::MoveFirstToEndOf(LeafPage *recipient) {
  */
 void LeafPage::CopyLastFrom(GenericKey *key, const RowId value) {
   SetValueAt(GetSize(),value);
-  SetValueAt(GetSize(),key);
+  SetKeyAt(GetSize(),key);
   IncreaseSize(1);
 }
 
@@ -255,12 +295,12 @@ void LeafPage::MoveLastToFrontOf(LeafPage *recipient) {
  *
  */
 void LeafPage::CopyFirstFrom(GenericKey *key, const RowId value) {
-  for(int i=0;i<GetSize();i++)
+  for(int i=GetSize()-1;i>=0;i++)
   {
     SetValueAt(i+1,ValueAt(i));
-    SetKeyAt(i+1,SetKeyAt(i));
+    SetKeyAt(i+1,KeyAt(i));
   }
   SetValueAt(0,value);
-  SetKeyAt(0,Key);
+  SetKeyAt(0,key);
   IncreaseSize(1);
 }

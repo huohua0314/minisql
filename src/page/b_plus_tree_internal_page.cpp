@@ -74,16 +74,16 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
   int left = 1;
   int right = GetSize() - 1;
   GenericKey * temp;
-  while(1)
+  while(right>=left)
   {
     int middle = (left + right) /2;
-    #ifdef b_tree_DEBUG
-      LOG(INFO) << "middle value:" << middle << <<" left:"<<left << " right:" << right<< std::endl;
+    #ifdef BTREE_DEBUG
+      LOG(INFO) <<"begin look up in InternalPage"<<std::endl<< "middle value:" << middle <<" left:"<<left << " right:" << right<< std::endl;
     #endif
     temp = KeyAt(middle) ;
     if(KM.CompareKeys(temp,key)>0)
     {
-      right = middle;
+      right = middle-1;
     }
     else if(KM.CompareKeys(temp,key)<0)
     {
@@ -93,11 +93,9 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
     {
       return ValueAt(middle);
     }
-    if(right - left == 0)
-    {
-      return ValueAt(left-1);
-    }
+  
   }
+  return ValueAt(left-1);
 }
 
 /*****************************************************************************
@@ -123,6 +121,10 @@ void InternalPage::PopulateNewRoot(const page_id_t &old_value, GenericKey *new_k
  */
 int InternalPage::InsertNodeAfter(const page_id_t &old_value, GenericKey *new_key, const page_id_t &new_value) {
   int index = ValueIndex(old_value);
+   if(GetSize()==GetMaxSize())
+  {
+    LOG(WARNING) << "internal page full, need spilt" << std::endl;
+  }
   if(index==-1)
   {
     ASSERT(false,"InteranlPage out of size");

@@ -10,7 +10,10 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
   uint32_t num = fields_.size();
   MACH_WRITE_TO(uint32_t,buf+offset,num);
   offset += sizeof(uint32_t);
-
+  #ifdef RECORD_DEBUG 
+      LOG(INFO) <<"Row serialize Begin"<< std::endl;
+      std::cout <<"field_Size:" << num <<std::endl;
+  #endif
   char * bitmap;
   int byte = num / 8 + ((num % 8 >0) ? 1: 0);
   bitmap = new char(byte);
@@ -30,14 +33,17 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
   {
     uint32_t len;
     len = fields_[i]->SerializeTo(buf + offset);
-    offset += len;
+    
     #ifdef RECORD_DEBUG 
-      LOG(INFO) <<"serial temp offset:"<<offset << std::endl;
+      std::cout <<"fields_.value.int:"<<fields_[i]->value_.integer_ << std::endl;;
+      std::cout <<"serial temp offset:"<<offset << std::endl;
     #endif
+    
+    offset += len;
   }
   delete [] bitmap;
   #ifdef RECORD_DEBUG 
-      LOG(INFO) <<"serial final offset:"<<offset << std::endl;
+      std::cout <<"serial final offset:"<<offset << std::endl;
   #endif
   return offset;
 }
@@ -50,8 +56,8 @@ uint32_t Row::DeserializeFrom(char *buf,Schema *schema) {
   
   number = MACH_READ_FROM(u_int32_t,buf+offset);
   offset += sizeof(uint32_t);
-  #ifdef RECORD_DEBUG 
-      LOG(INFO) <<"filed_number:"<<number<<" now offset:"<<offset << std::endl;
+  #ifdef BTREE_DEBUG 
+      LOG(INFO) <<" Begin deserial "<< std::endl<<"filed_number:"<<number<<" now offset:"<<offset << std::endl;
   #endif
   char *bitmap;
   int byte = number / 8 + ((number % 8 >0) ? 1: 0);
@@ -72,14 +78,16 @@ uint32_t Row::DeserializeFrom(char *buf,Schema *schema) {
     
     len = temp->DeserializeFrom(buf+offset,col->GetType(),&temp,flag);
     #ifdef RECORD_DEBUG 
-      LOG(INFO) <<"deserial temp offset:"<<offset << std::endl;
+      std::cout <<"deserial temp offset:"<<offset << std::endl;
     #endif
     offset += len;
     fields_.push_back(temp) ;
+      std::cout <<"fields_.value.int:"<<fields_[i]->value_.integer_ << std::endl;;
   }
   delete [] bitmap;
-  #ifdef RECORD_DEBUG 
-      LOG(INFO) <<"deserial final offset:"<<offset << std::endl;
+  #ifdef BTREE_DEBUG 
+    //  std::cout <<"deserial final offset:"<<offset << std::endl;
+     LOG(INFO) << "end of deserial"<<std::endl;
   #endif
   return offset;
 }
