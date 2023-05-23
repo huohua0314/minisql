@@ -4,7 +4,7 @@
 
 #include "index/generic_key.h"
 
-#define pairs_off (data_ + LEAF_PAGE_HEADER_SIZE)
+#define pairs_off (data_)
 #define pair_size (GetKeySize() + sizeof(RowId))
 #define key_off 0
 #define val_off GetKeySize()
@@ -28,6 +28,7 @@ void LeafPage::Init(page_id_t page_id, page_id_t parent_id, int key_size, int ma
   SetParentPageId(parent_id);
   SetSize(0);
   SetMaxSize(max_size);
+  SetNextPageId(INVALID_PAGE_ID);
 }
 
 /**
@@ -71,6 +72,9 @@ GenericKey *LeafPage::KeyAt(int index) {
 }
 
 void LeafPage::SetKeyAt(int index, GenericKey *key) {
+  LOG(ERROR) << LEAF_PAGE_HEADER_SIZE + index * pair_size + key_off+GetKeySize() <<std::endl;
+  cout << "pair_size" << pair_size << " keySize:" << GetKeySize()<<"index:"<<index<<endl;
+  LOG(INFO) <<"??";
   memcpy(pairs_off + index * pair_size + key_off, key, GetKeySize());
 }
 
@@ -167,7 +171,7 @@ void LeafPage::MoveHalfTo(LeafPage *recipient) {
  * Copy starting from items, and copy {size} number of elements into me.
  */
 void LeafPage::CopyNFrom(void *src, int size) {
-  memcpy(pairs_off + GetSize() * pair_size,src,size * val_off);
+  memcpy(pairs_off + GetSize() * pair_size,src,size * pair_size);
   IncreaseSize(size);
 }
 

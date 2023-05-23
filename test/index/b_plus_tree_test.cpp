@@ -16,11 +16,11 @@ TEST(BPlusTreeTests, SampleTest) {
   };
   Schema *table_schema = new Schema(columns);
   KeyManager KP(table_schema, 16);
-  BPlusTree tree(0, engine.bpm_, KP);
+  BPlusTree tree(0, engine.bpm_, KP,5,5);
   std::cout  << tree.leaf_max_size_<<std::endl;
   TreeFileManagers mgr("tree_");
   // Prepare data
-  const int n = 200;
+  const int n =100;
   vector<GenericKey *> keys;
   vector<RowId> values;
   vector<GenericKey *> delete_seq;
@@ -46,6 +46,7 @@ TEST(BPlusTreeTests, SampleTest) {
   // Insert data
   for (int i = 0; i < n; i++) {
     LOG(ERROR) <<"inset number:" <<i<<endl;
+   
     tree.Insert(keys[i], values[i]);
   }
   // ASSERT(false,"test");
@@ -66,6 +67,7 @@ TEST(BPlusTreeTests, SampleTest) {
   // Delete half keys
   for (int i = 0; i < n / 2; i++) {
     tree.Remove(delete_seq[i]);
+    tree.PrintTree(mgr[i]);
   }
   tree.PrintTree(mgr[1]);
   // Check valid

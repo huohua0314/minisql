@@ -2,7 +2,7 @@
 
 #include "index/generic_key.h"
 
-#define pairs_off (data_ + INTERNAL_PAGE_HEADER_SIZE)
+#define pairs_off (data_)
 #define pair_size (GetKeySize() + sizeof(page_id_t))
 #define key_off 0
 #define val_off GetKeySize()
@@ -22,7 +22,7 @@ void InternalPage::Init(page_id_t page_id, page_id_t parent_id, int key_size, in
   SetPageId(page_id);
   SetSize(0);
   SetPageType(IndexPageType::INTERNAL_PAGE);
-  SetPageId(parent_id);
+  SetParentPageId(parent_id);
   SetKeySize(key_size);
   SetMaxSize(max_size);
 }
@@ -95,6 +95,10 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
     }
   
   }
+  #ifdef BTREE_DEBUG
+  std::cout << "lookup page_id:" <<ValueAt(left-1) <<std::endl;
+  LOG(INFO) <<"Endof Lookup"<<std::endl;
+  #endif
   return ValueAt(left-1);
 }
 
@@ -132,15 +136,18 @@ int InternalPage::InsertNodeAfter(const page_id_t &old_value, GenericKey *new_ke
   }
   else
   {
-    for(int i=GetSize()-1;i>=index;i--)
+    for(int i=GetSize()-1;i>index;i--)
     {
       page_id_t temp = ValueAt(i) ;
       GenericKey * key = KeyAt(i);
       SetKeyAt(i+1,key);
       SetValueAt(i+1,temp);
     }
-    SetKeyAt(index,new_key);
-    SetValueAt(index,new_value);
+    SetKeyAt(index+1,new_key);
+    SetValueAt(index+1,new_value);
+    IncreaseSize(1);
+    LOG(WARNING) << GetSize() <<std::endl;
+    return GetSize();
   }
 }
 
@@ -153,7 +160,10 @@ int InternalPage::InsertNodeAfter(const page_id_t &old_value, GenericKey *new_ke
  */
 void InternalPage::MoveHalfTo(InternalPage *recipient, BufferPoolManager *buffer_pool_manager) {
   int size = GetSize() /2;
-  int remain_size = GetMaxSize() - GetSize() / 2;
+  int remain_size = GetSize() - GetSize() / 2;
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "remove size:" << size << "remain size" << remain_size <<std::endl;
+  #endif
 
   recipient -> CopyNFrom(PairPtrAt(remain_size),size,buffer_pool_manager);
   SetSize(remain_size);
