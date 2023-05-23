@@ -65,11 +65,11 @@ TEST(BPlusTreeTests, SampleTest) {
   }
   ASSERT_TRUE(tree.Check());
   // Delete half keys
-  for (int i = 0; i < n / 2; i++) {
+  for (int i = 0; i < n/2 ; i++) {
+    LOG(ERROR) << "remove:" << i<<endl;
     tree.Remove(delete_seq[i]);
     tree.PrintTree(mgr[i]);
   }
-  tree.PrintTree(mgr[1]);
   // Check valid
   ans.clear();
   for (int i = 0; i < n / 2; i++) {

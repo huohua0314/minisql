@@ -378,6 +378,9 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
  */
 bool BPlusTree::Coalesce(LeafPage *&neighbor_node, LeafPage *&node, InternalPage *&parent, int index,
                          Transaction *transaction) {
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "BEGIN COALESCE on leaf ********************" <<std::endl;
+  #endif
   ASSERT(neighbor_node->GetParentPageId()==node->GetParentPageId()&&parent->GetPageId()==node->GetParentPageId(),"parent not equal!");
   if(index == 0)
   {
@@ -393,19 +396,26 @@ bool BPlusTree::Coalesce(LeafPage *&neighbor_node, LeafPage *&node, InternalPage
     parent->Remove(index);
     neighbor_node->SetNextPageId(node->GetNextPageId());
     buffer_pool_manager_->UnpinPage(neighbor_node->GetPageId(),true);
-    return true;
   }
   if(parent->GetSize()<parent->GetMinSize())
   {
+    #ifdef BTREE_DEBUG
+    LOG(WARNING) << "end COALESCE********************" <<std::endl;
+    #endif
     return CoalesceOrRedistribute(parent,nullptr);
   }
-  else
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "end COALESCE********************" <<std::endl;
+  #endif
     return false;
 }
 
 bool BPlusTree::Coalesce(InternalPage *&neighbor_node, InternalPage *&node, InternalPage *&parent, int index,
                          Transaction *transaction) {
-  ASSERT(neighbor_node->GetParentPageId()==node->GetParentPageId()&&parent->GetPageId()==node->GetPageId(),"parent not equal!");
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "BEGIN COALESCE on internal ********************" <<std::endl;
+  #endif
+  ASSERT(neighbor_node->GetParentPageId()==node->GetParentPageId()&&parent->GetPageId()==node->GetParentPageId(),"parent not equal!");
   if(index == 0)
   {
     neighbor_node->MoveAllTo(node,parent->KeyAt(1),buffer_pool_manager_);
@@ -417,14 +427,19 @@ bool BPlusTree::Coalesce(InternalPage *&neighbor_node, InternalPage *&node, Inte
   {
     node->MoveAllTo(neighbor_node,parent->KeyAt(index),buffer_pool_manager_);
     parent->Remove(index);
-    buffer_pool_manager_->UnpinPage(node->GetPageId(),true);
-    buffer_pool_manager_->DeletePage(neighbor_node->GetPageId());
+    buffer_pool_manager_->UnpinPage(neighbor_node->GetPageId(),true);
+    buffer_pool_manager_->DeletePage(node->GetPageId());
   }
   if(parent->GetSize()<parent->GetMinSize())
   {
+    #ifdef BTREE_DEBUG
+  LOG(WARNING) << "end COALESCE********************" <<std::endl;
+  #endif
     return CoalesceOrRedistribute(parent,nullptr);
   }
-  else
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "end COALESCE********************" <<std::endl;
+  #endif
     return false;
 }
 
@@ -438,6 +453,9 @@ bool BPlusTree::Coalesce(InternalPage *&neighbor_node, InternalPage *&node, Inte
  * @param   node               input from method coalesceOrRedistribute()
  */
 void BPlusTree::Redistribute(LeafPage *neighbor_node, LeafPage *node, int index) {
+   #ifdef BTREE_DEBUG
+  LOG(WARNING) << "BEGIN redis on leaf ********************" <<std::endl;
+  #endif
   ASSERT(neighbor_node->GetParentPageId()==node->GetParentPageId(),"parent not equal!");
   auto parent_page = reinterpret_cast<InternalPage *>(buffer_pool_manager_->FetchPage(node->GetParentPageId()));
   if(index==0)
@@ -453,8 +471,14 @@ void BPlusTree::Redistribute(LeafPage *neighbor_node, LeafPage *node, int index)
     parent_page->SetKeyAt(index,node->KeyAt(0));
     buffer_pool_manager_->UnpinPage(parent_page->GetPageId(),true);
   }
+   #ifdef BTREE_DEBUG
+  LOG(WARNING) << "end redis on leaf ********************" <<std::endl;
+  #endif
 }
 void BPlusTree::Redistribute(InternalPage *neighbor_node, InternalPage *node, int index) {
+   #ifdef BTREE_DEBUG
+  LOG(WARNING) << "BEGIN redis on internal ********************" <<std::endl;
+  #endif
   ASSERT(neighbor_node->GetParentPageId()==node->GetParentPageId(),"parent not equal!");
   auto parent_page = reinterpret_cast<InternalPage *>(buffer_pool_manager_->FetchPage(node->GetParentPageId()));
   if(index!=0)
@@ -469,6 +493,9 @@ void BPlusTree::Redistribute(InternalPage *neighbor_node, InternalPage *node, in
     parent_page->SetKeyAt(1,neighbor_node->KeyAt(0));
     buffer_pool_manager_->UnpinPage(parent_page->GetPageId(),true);
   }
+   #ifdef BTREE_DEBUG
+  LOG(WARNING) << "end redis on leaf ********************" <<std::endl;
+  #endif
 }
 /*
  * Update root page if necessary

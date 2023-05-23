@@ -269,7 +269,7 @@ void InternalPage::CopyLastFrom(GenericKey *key, const page_id_t value, BufferPo
   SetValueAt(index,value);
   SetKeyAt(index,key);
   IncreaseSize(1);
-  page->SetParentPageId(GetParentPageId());
+  page->SetParentPageId(GetPageId());
   buffer_pool_manager->UnpinPage(value,true);
 }
 

@@ -299,7 +299,7 @@ void LeafPage::MoveLastToFrontOf(LeafPage *recipient) {
  *
  */
 void LeafPage::CopyFirstFrom(GenericKey *key, const RowId value) {
-  for(int i=GetSize()-1;i>=0;i++)
+  for(int i=GetSize()-1;i>=0;i--)
   {
     SetValueAt(i+1,ValueAt(i));
     SetKeyAt(i+1,KeyAt(i));
