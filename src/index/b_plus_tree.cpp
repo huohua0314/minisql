@@ -413,7 +413,7 @@ bool BPlusTree::Coalesce(LeafPage *&neighbor_node, LeafPage *&node, InternalPage
 bool BPlusTree::Coalesce(InternalPage *&neighbor_node, InternalPage *&node, InternalPage *&parent, int index,
                          Transaction *transaction) {
   #ifdef BTREE_DEBUG
-  LOG(WARNING) << "BEGIN COALESCE on internal ********************" <<std::endl;
+  LOG(WARNING) << "BEGIN COALESCE on internal ******************** index:"<<index <<std::endl;
   #endif
   ASSERT(neighbor_node->GetParentPageId()==node->GetParentPageId()&&parent->GetPageId()==node->GetParentPageId(),"parent not equal!");
   if(index == 0)

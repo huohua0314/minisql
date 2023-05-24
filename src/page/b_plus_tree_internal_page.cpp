@@ -228,9 +228,15 @@ page_id_t InternalPage::RemoveAndReturnOnlyChild() {
  * pages that are moved to the recipient
  */
 void InternalPage::MoveAllTo(InternalPage *recipient, GenericKey *middle_key, BufferPoolManager *buffer_pool_manager) {
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "Begin MoveallTo" << std::endl;
+  #endif
   recipient->CopyLastFrom(middle_key,ValueAt(0),buffer_pool_manager);
   recipient->CopyNFrom((void *) KeyAt(1),GetSize()-1,buffer_pool_manager);
   SetSize(0);
+  #ifdef BTREE_DEBUG
+  LOG(WARNING) << "END MoveallTo" << std::endl;
+  #endif
 }
 
 /*****************************************************************************
@@ -283,7 +289,7 @@ void InternalPage::CopyLastFrom(GenericKey *key, const page_id_t value, BufferPo
 void InternalPage::MoveLastToFrontOf(InternalPage *recipient, GenericKey *middle_key,
                                      BufferPoolManager *buffer_pool_manager) {
     int size = GetSize();
-    recipient->CopyFirstFrom(ValueAt(size),buffer_pool_manager);
+    recipient->CopyFirstFrom(ValueAt(size-1),buffer_pool_manager);
     recipient->SetKeyAt(1,middle_key);
     IncreaseSize(-1);
 }

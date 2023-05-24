@@ -20,7 +20,7 @@ TEST(BPlusTreeTests, SampleTest) {
   std::cout  << tree.leaf_max_size_<<std::endl;
   TreeFileManagers mgr("tree_");
   // Prepare data
-  const int n =100;
+  const int n =500;
   vector<GenericKey *> keys;
   vector<RowId> values;
   vector<GenericKey *> delete_seq;
@@ -65,17 +65,17 @@ TEST(BPlusTreeTests, SampleTest) {
   }
   ASSERT_TRUE(tree.Check());
   // Delete half keys
-  for (int i = 0; i < n/2 ; i++) {
+  for (int i = 0; i < n-1 ; i++) {
     LOG(ERROR) << "remove:" << i<<endl;
     tree.Remove(delete_seq[i]);
     tree.PrintTree(mgr[i]);
   }
   // Check valid
   ans.clear();
-  for (int i = 0; i < n / 2; i++) {
+  for (int i = 0; i < n -1; i++) {
     ASSERT_FALSE(tree.GetValue(delete_seq[i], ans));
   }
-  for (int i = n / 2; i < n; i++) {
+  for (int i = n -1; i < n; i++) {
     ASSERT_TRUE(tree.GetValue(delete_seq[i], ans));
     ASSERT_EQ(kv_map[delete_seq[i]], ans[ans.size() - 1]);
   }
