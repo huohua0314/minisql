@@ -13,10 +13,12 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
   };
   Schema *table_schema = new Schema(columns);
   KeyManager KP(table_schema, 16);
-  BPlusTree tree(0, engine.bpm_, KP);
+  BPlusTree tree(0, engine.bpm_, KP,5,5);
   // Generate insert record
   vector<GenericKey *> insert_key;
+  LOG(ERROR) <<"Begin Insert #########################################" <<std::endl;
   for (int i = 1; i <= 50; i++) {
+    LOG(ERROR) <<"INSERT " << i << std::endl;
     GenericKey *key = KP.InitKey();
     std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
     KP.SerializeFromKey(key, Row(fields), table_schema);
@@ -24,8 +26,10 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
     tree.Insert(key, RowId(i * 100), nullptr);
   }
   // Generate delete record
+  LOG(ERROR) <<"Begin Delete #########################################" <<std::endl;
   vector<GenericKey *> delete_key;
   for (int i = 2; i <= 50; i += 2) {
+    LOG(ERROR) <<"Delete " << i << std::endl;
     GenericKey *key = KP.InitKey();
     std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
     KP.SerializeFromKey(key, Row(fields), table_schema);
@@ -33,12 +37,14 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
     tree.Remove(key);
   }
   // Search keys
+  LOG(ERROR) <<"#########################################";
   vector<RowId> v;
   vector<GenericKey *> not_delete_key;
   for (auto key : delete_key) {
     ASSERT_FALSE(tree.GetValue(key, v));
   }
   for (int i = 1; i <= 49; i += 2) {
+    LOG(ERROR) <<"Search " << i << std::endl;
     GenericKey *key = KP.InitKey();
     std::vector<Field> fields{Field(TypeId::kTypeInt, i)};
     KP.SerializeFromKey(key, Row(fields), table_schema);
@@ -47,8 +53,15 @@ TEST(BPlusTreeTests, IndexIteratorTest) {
     ASSERT_EQ(i * 100, v[v.size() - 1].Get());
   }
   // Iterator
+  LOG(ERROR) <<"Begin Interator #########################################";
   int i = 0;
+  
   for (auto iter = tree.Begin(); iter != tree.End(); ++iter) {
+    LOG(ERROR) <<"Iterator " << i << std::endl;
+    if(i>=24)
+    {
+      int a=0;
+    }
     ASSERT_TRUE(KP.CompareKeys(not_delete_key[i++], (*iter).first) == 0);  // if equal, CompareKeys return 0
     EXPECT_EQ(RowId((2 * i - 1) * 100), (*iter).second);
   }

@@ -100,7 +100,7 @@ void LeafPage::PairCopy(void *dest, void *src, int pair_num) {
  */
 std::pair<GenericKey *, RowId> LeafPage::GetItem(int index) {
     // replace with your own code
-    return make_pair(nullptr, RowId());
+    return make_pair(KeyAt(index),ValueAt(index));
 }
 
 /*****************************************************************************

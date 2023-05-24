@@ -538,7 +538,8 @@ bool BPlusTree::AdjustRoot(BPlusTreePage *old_root_node) {
  * @return : index iterator
  */
 IndexIterator BPlusTree::Begin() {
-  return IndexIterator();
+  auto page = reinterpret_cast<LeafPage *> (FindLeafPage(nullptr,root_page_id_,true));
+  return IndexIterator(page->GetPageId(),buffer_pool_manager_,0);
 }
 
 /*
@@ -547,7 +548,9 @@ IndexIterator BPlusTree::Begin() {
  * @return : index iterator
  */
 IndexIterator BPlusTree::Begin(const GenericKey *key) {
-   return IndexIterator();
+  auto page = reinterpret_cast<LeafPage *> (FindLeafPage(key,root_page_id_,false));
+  int index = page->findIndex(key,processor_);
+  return IndexIterator(page->GetPageId(),buffer_pool_manager_,index);
 }
 
 /*
@@ -556,7 +559,7 @@ IndexIterator BPlusTree::Begin(const GenericKey *key) {
  * @return : index iterator
  */
 IndexIterator BPlusTree::End() {
-  return IndexIterator();
+  return IndexIterator(INVALID_PAGE_ID,buffer_pool_manager_,-1);
 }
 
 /*****************************************************************************
