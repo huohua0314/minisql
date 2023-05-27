@@ -9,8 +9,10 @@ bool TableHeap::InsertTuple(Row &row, Transaction *txn) {
     #endif 
   if(first_page_id_ == INVALID_PAGE_ID)
   {
-    LOG(ERROR) << "first_page in table heap is invalid" << endl;
-    return false;
+    auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->NewPage(first_page_id_));
+    ASSERT(page!=nullptr && first_page_id_!=INVALID_PAGE_ID,"new page fail");
+    page->Init(first_page_id_,INVALID_TABLE_ID,nullptr,nullptr);
+    buffer_pool_manager_->UnpinPage(first_page_id_,true);
   }
 
   auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(first_page_id_));

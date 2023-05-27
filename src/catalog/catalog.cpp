@@ -112,8 +112,8 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
         index_names_[table_info->GetTableName()][index_meta->GetIndexName()] = index_meta->GetIndexId();
         buffer_pool_manager->UnpinPage(iter.second,false);
       }
-      buffer_pool_manager->UnpinPage(CATALOG_META_PAGE_ID,false);
     }
+    buffer_pool_manager->UnpinPage(CATALOG_META_PAGE_ID,false);
 }
 
 CatalogManager::~CatalogManager() {
@@ -144,17 +144,26 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
   }
   table_id_t new_table_id = next_table_id_++;
   page_id_t new_table_page;
+  page_id_t new_page;
   char * buf = reinterpret_cast<char *>(buffer_pool_manager_->NewPage(new_table_page));
-  TableMetadata * new_table_meta = TableMetadata::Create(new_table_id,table_name,new_table_page,schema);
+
   TableHeap *new_table_heap = TableHeap::Create(buffer_pool_manager_,schema,nullptr,nullptr,nullptr);
+
+  new_page = new_table_heap->GetFirstPageId();
+
+  TableMetadata * new_table_meta = TableMetadata::Create(new_table_id,table_name,new_page,schema);
+  
   TableInfo *new_table_info = TableInfo::Create();
+
   new_table_info->Init(new_table_meta,new_table_heap);
   table_names_[table_name] = new_table_id;
   tables_[new_table_id] = new_table_info;
   index_names_[table_name] = std::unordered_map<std::string, index_id_t>();
   catalog_meta_->table_meta_pages_[new_table_id] = new_table_page;
+
   new_table_meta->SerializeTo(buf);
   table_info = new_table_info;
+  FlushCatalogMetaPage();
   buffer_pool_manager_->UnpinPage(new_table_page,true);
   #ifdef CATALOG_DEBUG
     LOG(WARNING) << "end  CreateTable:" << table_name <<"success " <<std::endl;
@@ -223,6 +232,7 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
 
   page_id_t new_index_page;
   char * buf = reinterpret_cast<char *>(buffer_pool_manager_->NewPage(new_index_page));
+
   table_id_t table_id = table_names_[table_name];
   TableInfo * table_info = tables_[table_id];
   vector<uint32_t> key_map;
@@ -247,6 +257,7 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
   indexes_[new_index_id] = new_index_info;
   index_names_[table_name][index_name] = new_index_id;
   catalog_meta_->index_meta_pages_[new_index_id] = new_index_page;
+  FlushCatalogMetaPage() ;
   buffer_pool_manager_->UnpinPage(new_index_page,true);
   return DB_SUCCESS;
 }
@@ -296,16 +307,66 @@ dberr_t CatalogManager::GetTableIndexes(const std::string &table_name, std::vect
  * TODO: Student Implement
  */
 dberr_t CatalogManager::DropTable(const string &table_name) {
-   
-   return DB_FAILED;
+  if(table_names_.count(table_name)==0) 
+  {
+    return DB_TABLE_NOT_EXIST;
+  }
+  table_id_t drop_table_id;
+  page_id_t drop_page;
+  drop_table_id = table_names_[table_name];
+  table_names_.erase(table_name);
+  tables_[drop_table_id]->GetTableHeap()->FreeTableHeap();
+
+  delete tables_[drop_table_id];
+  tables_.erase(drop_table_id);
+  for(auto iter:index_names_[table_name])
+  {
+    delete indexes_[iter.second];
+    indexes_.erase(iter.second);
+    DropIndex(table_name,iter.first);
+  }
+  
+  drop_page = catalog_meta_->table_meta_pages_[drop_table_id];
+  buffer_pool_manager_->DeletePage(drop_page);
+
+  catalog_meta_->table_meta_pages_.erase(drop_table_id);
+  FlushCatalogMetaPage();
+  return  DB_SUCCESS;
 }
 
 /**
  * TODO: Student Implement
  */
 dberr_t CatalogManager::DropIndex(const string &table_name, const string &index_name) {
-  ASSERT(false, "Not Implemented yet");
-  return DB_FAILED;
+  if(table_names_.count(table_name)==0)
+  {
+    LOG(WARNING) << "END CREATEINEDX" <<" table not exist"<<std::endl;
+    return DB_TABLE_NOT_EXIST;
+  }
+
+  if (index_names_[table_name].count(index_name) == 0) {
+    #ifdef CATALOG_DEBUG
+    LOG(WARNING) << "end CreateIndex index:"<<table_name<<" index:"<<index_name <<"index exist" <<std::endl;
+    #endif
+
+    return DB_INDEX_ALREADY_EXIST;
+  }
+  
+  index_id_t drop_index_id;
+  IndexInfo * drop_index_info;
+  page_id_t drop_page;
+  drop_index_id = index_names_.at(table_name).at(index_name);
+  index_names_.at(table_name).erase(index_name);
+  drop_index_info = indexes_.at(drop_index_id);
+  indexes_.erase(drop_index_id);
+  drop_page = catalog_meta_->index_meta_pages_[drop_index_id] ;
+  catalog_meta_->index_meta_pages_.erase(drop_index_id);
+  
+  drop_index_info->GetIndex()->Destroy();
+  delete drop_index_info;
+  FlushCatalogMetaPage();
+  return DB_SUCCESS;
+
 }
 
 /**
@@ -315,6 +376,7 @@ dberr_t CatalogManager::FlushCatalogMetaPage() const {
   auto buf= reinterpret_cast<char *>( buffer_pool_manager_->FetchPage(CATALOG_META_PAGE_ID));
   catalog_meta_->SerializeTo(buf);
   buffer_pool_manager_->UnpinPage(CATALOG_META_PAGE_ID,true);
+  buffer_pool_manager_->FlushPage(CATALOG_META_PAGE_ID);
   return DB_SUCCESS;
 }
 
