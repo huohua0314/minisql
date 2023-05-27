@@ -103,7 +103,7 @@ class TableHeap {
    */
   inline page_id_t GetFirstPageId() const { return first_page_id_; }
 
-private:
+  private:
   /**
    * create table heap and initialize first page
    */
@@ -117,6 +117,7 @@ private:
           LOG(INFO) << "first_page_id_id" << first_page_id_<<std::endl;
           ASSERT(first_page_id_!=INVALID_PAGE_ID,"first page get false");
           page->Init(first_page_id_,INVALID_PAGE_ID,log_manager_,nullptr);
+          buffer_pool_manager_->UnpinPage(first_page_id_,true);
   };
 
   explicit TableHeap(BufferPoolManager *buffer_pool_manager, page_id_t first_page_id, Schema *schema,

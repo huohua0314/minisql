@@ -8,6 +8,8 @@ static constexpr int INVALID_PAGE_ID = -1;   // invalid page id
 static constexpr int INVALID_FRAME_ID = -1;  // invalid transaction id
 static constexpr int INVALID_TXN_ID = -1;    // invalid transaction id
 static constexpr int INVALID_LSN = -1;       // invalid log sequence number
+static constexpr int INVALID_INDEX_ID = 0;
+static constexpr int INVALID_TABLE_ID = 0;
 
 static constexpr int META_PAGE_ID = 0;          // physical page id of the disk file meta info
 static constexpr int CATALOG_META_PAGE_ID = 0;  // logical page id of the catalog meta data

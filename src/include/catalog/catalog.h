@@ -110,7 +110,7 @@ class CatalogManager {
   [[maybe_unused]] LockManager *lock_manager_;
   [[maybe_unused]] LogManager *log_manager_;
   CatalogMeta *catalog_meta_;
-  std::atomic<table_id_t> next_table_id_;
+  std::atomic<table_id_t> next_table_id_; //TODO:?
   std::atomic<index_id_t> next_index_id_;
   // map for tables
   std::unordered_map<std::string, table_id_t> table_names_;

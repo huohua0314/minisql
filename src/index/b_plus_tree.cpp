@@ -28,8 +28,10 @@ BPlusTree::BPlusTree(index_id_t index_id, BufferPoolManager *buffer_pool_manager
       {
         int length = KM.GetKeySize() + sizeof(page_id_t);
         internal_max_size_ = (((PAGE_SIZE - INTERNAL_PAGE_HEADER_SIZE) / length) - 1);
-
       }
+      auto head = reinterpret_cast<IndexRootsPage  *>(buffer_pool_manager_->FetchPage(INDEX_ROOTS_PAGE_ID));
+      head->GetRootId(index_id_,&root_page_id_);
+      buffer_pool_manager_->UnpinPage(INDEX_ROOTS_PAGE_ID,false);
 }
 
 void BPlusTree::Destroy(page_id_t current_page_id) {

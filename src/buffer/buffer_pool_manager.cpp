@@ -121,7 +121,7 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
     page_id = disk_manager_->AllocatePage();
     pair<page_id_t,frame_id_t> p1(page_id,new_frame);
     page_table_.insert(p1);
-    LOG(WARNING) << page_id << endl;
+    LOG(WARNING) <<"NewPage:"<<page_id << endl;
     #ifdef ENABLE_BPM_DEBUG
       LOG(INFO) <<"get from freelist page_id:" <<page_id << endl;
     #endif 

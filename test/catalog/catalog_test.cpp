@@ -48,22 +48,26 @@ TEST(CatalogTest, CatalogTableTest) {
   std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
                                    new Column("name", TypeId::kTypeChar, 64, 1, true, false),
                                    new Column("account", TypeId::kTypeFloat, 2, true, false)};
-  auto schema = std::make_shared<Schema>(columns);
+ 
   Transaction txn;
-  catalog_01->CreateTable("table-1", schema.get(), &txn, table_info);
+  catalog_01->CreateTable("table-1", new Schema(columns), &txn, table_info);
   ASSERT_TRUE(table_info != nullptr);
   TableInfo *table_info_02 = nullptr;
   ASSERT_EQ(DB_SUCCESS, catalog_01->GetTable("table-1", table_info_02));
   ASSERT_EQ(table_info, table_info_02);
   auto *table_heap = table_info->GetTableHeap();
   ASSERT_TRUE(table_heap != nullptr);
+  LOG(ERROR) <<"BEGIN DELETE##########################";
   delete db_01;
   /** Stage 2: Testing catalog loading */
+  LOG(ERROR) <<"WHAT's UP#################################";
   auto db_02 = new DBStorageEngine(db_file_name, false);
   auto &catalog_02 = db_02->catalog_mgr_;
+  LOG(ERROR)<<"BEGIN STAGE2@@@@@@@@@@@@@@@@@@@@@@@@@@";
   TableInfo *table_info_03 = nullptr;
   ASSERT_EQ(DB_TABLE_NOT_EXIST, catalog_02->GetTable("table-2", table_info_03));
   ASSERT_EQ(DB_SUCCESS, catalog_02->GetTable("table-1", table_info_03));
+  LOG(ERROR) <<"BEGIN DELETE2########################";
   delete db_02;
 }
 
@@ -76,9 +80,8 @@ TEST(CatalogTest, CatalogIndexTest) {
   std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
                                    new Column("name", TypeId::kTypeChar, 64, 1, true, false),
                                    new Column("account", TypeId::kTypeFloat, 2, true, false)};
-  auto schema = std::make_shared<Schema>(columns);
   Transaction txn;
-  catalog_01->CreateTable("table-1", schema.get(), &txn, table_info);
+  catalog_01->CreateTable("table-1", new Schema(columns), &txn, table_info);
   ASSERT_TRUE(table_info != nullptr);
 
   IndexInfo *index_info = nullptr;
@@ -107,7 +110,9 @@ TEST(CatalogTest, CatalogIndexTest) {
     ASSERT_EQ(DB_SUCCESS, index_info->GetIndex()->ScanKey(row, ret, &txn));
     ASSERT_EQ(rid.Get(), ret[i].Get());
   }
+  LOG(ERROR) <<"BEGIN DELETE###########################";
   delete db_01;
+  LOG(ERROR) << "BEGIN STAGE2########################";
   /** Stage 2: Testing catalog loading */
   auto db_02 = new DBStorageEngine(db_file_name, false);
   auto &catalog_02 = db_02->catalog_mgr_;
