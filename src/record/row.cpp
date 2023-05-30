@@ -56,9 +56,9 @@ uint32_t Row::DeserializeFrom(char *buf,Schema *schema) {
   
   number = MACH_READ_FROM(u_int32_t,buf+offset);
   offset += sizeof(uint32_t);
-  #ifdef BTREE_DEBUG 
-      LOG(INFO) <<" Begin deserial "<< std::endl<<"filed_number:"<<number<<" now offset:"<<offset << std::endl;
-  #endif
+  // #ifdef BTREE_DEBUG 
+  //     LOG(INFO) <<" Begin deserial "<< std::endl<<"filed_number:"<<number<<" now offset:"<<offset << std::endl;
+  // #endif
   char *bitmap;
   int byte = number / 8 + ((number % 8 >0) ? 1: 0);
   bitmap = new char(byte);
@@ -82,13 +82,13 @@ uint32_t Row::DeserializeFrom(char *buf,Schema *schema) {
     #endif
     offset += len;
     fields_.push_back(temp) ;
-      std::cout <<"fields_.value.int:"<<fields_[i]->value_.integer_ << std::endl;;
+      // std::cout <<"fields_.value.int:"<<fields_[i]->value_.integer_ << std::endl;;
   }
   delete [] bitmap;
-  #ifdef BTREE_DEBUG 
-    //  std::cout <<"deserial final offset:"<<offset << std::endl;
-     LOG(INFO) << "end of deserial"<<std::endl;
-  #endif
+  // #ifdef BTREE_DEBUG 
+  //   //  std::cout <<"deserial final offset:"<<offset << std::endl;
+  //    LOG(INFO) << "end of deserial"<<std::endl;
+  // #endif
   return offset;
 }
 

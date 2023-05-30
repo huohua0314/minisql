@@ -1,12 +1,13 @@
 #pragma once
 
 #include <vector>
-
+#include <algorithm>
 #include "executor/execute_context.h"
 #include "executor/executors/abstract_executor.h"
 #include "executor/plans/index_scan_plan.h"
 #include "planner/expressions/column_value_expression.h"
 #include "planner/expressions/comparison_expression.h"
+#include "planner/expressions/constant_value_expression.h"
 
 /**
  * The IndexScanExecutor executor can over a table.
@@ -30,7 +31,7 @@ class IndexScanExecutor : public AbstractExecutor {
    * @return `true` if a row was produced, `false` if there are no more rows
    */
   bool Next(Row *row, RowId *rid) override;
-
+  void GetRowId(vector<vector<RowId>> &all , AbstractExpressionRef compare);
   /** @return The output schema for the sequential scan */
   const Schema *GetOutputSchema() const override { return plan_->OutputSchema(); }
 
@@ -38,4 +39,7 @@ class IndexScanExecutor : public AbstractExecutor {
 
   /** The sequential scan plan node to be executed */
   const IndexScanPlanNode *plan_;
+  vector <RowId> result;
+  int cursor_{0};
 };
+

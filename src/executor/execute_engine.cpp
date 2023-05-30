@@ -34,7 +34,12 @@ ExecuteEngine::ExecuteEngine() {
   }
   closedir(dir);
 }
+ExecuteEngine::ExecuteEngine(DBStorageEngine * dbs)
+{
 
+  current_db_="./databases/executor_test.db";
+  dbs_[current_db_] = dbs;
+}
 std::unique_ptr<AbstractExecutor> ExecuteEngine::CreateExecutor(ExecuteContext *exec_ctx,
                                                                 const AbstractPlanNodeRef &plan) {
   switch (plan->GetType()) {
@@ -74,6 +79,9 @@ std::unique_ptr<AbstractExecutor> ExecuteEngine::CreateExecutor(ExecuteContext *
 dberr_t ExecuteEngine::ExecutePlan(const AbstractPlanNodeRef &plan, std::vector<Row> *result_set, Transaction *txn,
                                    ExecuteContext *exec_ctx) {
   // Construct the executor for the abstract plan node
+  #ifdef EXECUTE_DEBUG
+    LOG(WARNING) << "Begin ExecutePlan-------" << std::endl;
+  #endif
   auto executor = CreateExecutor(exec_ctx, plan);
 
   try {
@@ -92,6 +100,9 @@ dberr_t ExecuteEngine::ExecutePlan(const AbstractPlanNodeRef &plan, std::vector<
     }
     return DB_FAILED;
   }
+  #ifdef EXECUTE_DEBUG
+    LOG(WARNING) << "End ExecutePlan-------" << std::endl;
+  #endif
   return DB_SUCCESS;
 }
 

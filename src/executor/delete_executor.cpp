@@ -13,8 +13,24 @@ DeleteExecutor::DeleteExecutor(ExecuteContext *exec_ctx, const DeletePlanNode *p
     : AbstractExecutor(exec_ctx), plan_(plan), child_executor_(std::move(child_executor)) {}
 
 void DeleteExecutor::Init() {
+  child_executor_->Init();
+  dberr_t test = exec_ctx_->GetCatalog()->GetTableIndexes(plan_->GetTableName(),indexes_ );
+  ASSERT(test == DB_SUCCESS,"get_index_fail") ;
+  test = exec_ctx_->GetCatalog()->GetTable(plan_->GetTableName(),table_info_);
+  ASSERT(test == DB_SUCCESS,"get table_info fail");
 }
 
 bool DeleteExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
+  Row temp;
+  RowId row_id;
+  while(child_executor_->Next(&temp,&row_id))
+  {
+    table_info_ -> GetTableHeap()->ApplyDelete(row_id,nullptr);
+    for(auto iter: indexes_)
+    {
+      iter->GetIndex()->RemoveEntry(temp,row_id,nullptr);
+    }
+    return true;
+  }
   return false;
 }

@@ -113,6 +113,9 @@ int TablePage::UpdateTuple(const Row &new_row, Row *old_row, Schema *schema, Tra
 
 void TablePage::ApplyDelete(const RowId &rid, Transaction *txn, LogManager *log_manager) {
   uint32_t slot_num = rid.GetSlotNum();
+  #ifdef CATALOG_DEBUG
+    LOG(INFO) << "page solt_num:" << GetTupleCount() << std::endl;
+  #endif
   ASSERT(slot_num < GetTupleCount(), "Cannot have more slots than tuples.");
 
   uint32_t tuple_offset = GetTupleOffsetAtSlot(slot_num);
@@ -129,7 +132,6 @@ void TablePage::ApplyDelete(const RowId &rid, Transaction *txn, LogManager *log_
           tuple_offset - free_space_pointer);
   SetFreeSpacePointer(free_space_pointer + tuple_size);
   SetTupleSize(slot_num, 0);
-  SetTupleCount(GetTupleCount() - 1);
   SetTupleOffsetAtSlot(slot_num, 0);
 
   // Update all tuple offsets.

@@ -87,6 +87,7 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
       for(auto iter :catalog_meta_->table_meta_pages_)
       {
         char *temp = reinterpret_cast<char *>(buffer_pool_manager->FetchPage(iter.second));
+        auto test = reinterpret_cast<TableMetadata *>(temp);
         TableMetadata *table_meta;
         TableHeap *table_heap;
         TableInfo * table_info = TableInfo::Create();
@@ -165,6 +166,7 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
   table_info = new_table_info;
   FlushCatalogMetaPage();
   buffer_pool_manager_->UnpinPage(new_table_page,true);
+  buffer_pool_manager_->FlushPage(new_table_page);
   #ifdef CATALOG_DEBUG
     LOG(WARNING) << "end  CreateTable:" << table_name <<"success " <<std::endl;
   #endif
@@ -259,6 +261,7 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
   catalog_meta_->index_meta_pages_[new_index_id] = new_index_page;
   FlushCatalogMetaPage() ;
   buffer_pool_manager_->UnpinPage(new_index_page,true);
+  buffer_pool_manager_->FlushPage(new_index_page);
   return DB_SUCCESS;
 }
 

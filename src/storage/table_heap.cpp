@@ -89,12 +89,12 @@ bool TableHeap::UpdateTuple( Row &row, const RowId &rid, Transaction *txn) {
     #endif 
   auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
   Row old_row(rid);
-  if(!page->GetTuple(&old_row,schema_,txn,lock_manager_))
-  {
-    LOG(WARNING) << "update tuple not exist" << std::endl;
-    buffer_pool_manager_->UnpinPage(page->GetPageId(),false);
-    return false;
-  }
+  // if(!page->GetTuple(&old_row,schema_,txn,lock_manager_))
+  // {
+  //   LOG(WARNING) << "update tuple not exist" << std::endl;
+  //   buffer_pool_manager_->UnpinPage(page->GetPageId(),false);
+  //   return false;
+  // }
   
   int flag = 0;
   int type;

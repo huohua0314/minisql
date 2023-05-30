@@ -23,6 +23,7 @@ extern "C" {
 class ExecuteEngine {
  public:
   ExecuteEngine();
+  ExecuteEngine(DBStorageEngine *);
 
   ~ExecuteEngine() {
     for (auto it : dbs_) {

@@ -45,7 +45,9 @@ uint32_t TableMetadata::DeserializeFrom(char *buf, TableMetadata *&table_meta) {
         LOG(WARNING) << "Pointer object table info is not null in table info deserialize." << std::endl;
     }
     char *p = buf;
-    // magic num
+    // magic num4,
+    auto test = reinterpret_cast<TableMetadata *>(buf);
+    auto aa =  reinterpret_cast<uint32_t *>(buf);
     uint32_t magic_num = MACH_READ_UINT32(buf);
     buf += 4;
     ASSERT(magic_num == TABLE_METADATA_MAGIC_NUM, "Failed to deserialize table info.");

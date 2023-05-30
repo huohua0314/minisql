@@ -56,6 +56,8 @@ class AbstractExpression {
   /** @return the type of this expression */
   virtual ExpressionType GetType() { return type_; }
 
+  virtual std::string GetComparisonType(){ return "INVAILD_COMPARE_TYPE";}
+
  private:
   /** The return type of this expression. */
   TypeId ret_type_;

@@ -35,9 +35,9 @@ Page *BufferPoolManager::FetchPage(page_id_t page_id) {
   // 2.     If R is dirty, write it back to the disk.
   // 3.     Delete R from the page table and insert P.
   // 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
-  #ifdef  BTREE_DEBUG
-      LOG(INFO) <<"start fetch page:" <<page_id << endl;
-    #endif 
+  // #ifdef  BTREE_DEBUG
+  //     LOG(INFO) <<"start fetch page:" <<page_id << endl;
+  //   #endif 
   if(page_table_.count(page_id) == 1)
   {
     replacer_->Pin(page_table_[page_id]);

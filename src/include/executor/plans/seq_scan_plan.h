@@ -34,6 +34,8 @@ class SeqScanPlanNode : public AbstractPlanNode {
 
   /** The predicate to filter in SeqScan.*/
   AbstractExpressionRef filter_predicate_;
+
+  // TableIterator
 };
 
 #endif  // MINISQL_SEQ_SCAN_PLAN_H

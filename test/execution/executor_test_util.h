@@ -43,8 +43,8 @@ class ExecutorTest : public ::testing::Test {
     std::vector<Column *> columns = {new Column("id", TypeId::kTypeInt, 0, false, false),
                                      new Column("name", TypeId::kTypeChar, 64, 1, true, false),
                                      new Column("account", TypeId::kTypeFloat, 2, true, false)};
-    auto schema = std::make_shared<Schema>(columns);
-    catalog_01->CreateTable("table-1", schema.get(), txn_, table_info);
+    auto schema = new Schema(columns);
+    catalog_01->CreateTable("table-1", schema, txn_, table_info);
     TableHeap *table_heap = table_info->GetTableHeap();
     for (int i = 0; i < 1000; i++) {
       int32_t len = RandomUtils::RandomInt(0, 64);
@@ -57,9 +57,10 @@ class ExecutorTest : public ::testing::Test {
       ASSERT_TRUE(table_heap->InsertTuple(row, nullptr));
       delete[] characters;
     }
+    LOG(ERROR) << "test";
     // Create an executor context for our executors
     exec_ctx_ = std::make_unique<ExecuteContext>(txn_, db_test_->catalog_mgr_, db_test_->bpm_);
-
+    LOG(ERROR) <<"TEST@";
     // Construct the executor engine for the test
     execution_engine_ = std::make_unique<ExecuteEngine>();
   }
@@ -68,7 +69,10 @@ class ExecutorTest : public ::testing::Test {
   void TearDown() override { delete db_test_; };
 
   /** @return The executor context for our test instance. */
-  ExecuteContext *GetExecutorContext() { return exec_ctx_.get(); }
+  ExecuteContext *GetExecutorContext() {
+     int a = 1;
+     return exec_ctx_.get(); 
+    }
 
   /** @return The execution engine for our test instance. */
   ExecuteEngine *GetExecutionEngine() { return execution_engine_.get(); }
@@ -177,7 +181,7 @@ class ExecutorTest : public ::testing::Test {
   /** The executor context for the test */
   std::unique_ptr<ExecuteContext> exec_ctx_;
   /** The execution engine */
-  std::unique_ptr<ExecuteEngine> execution_engine_;
+ std::unique_ptr<ExecuteEngine> execution_engine_;
   /** The collection of allocated expressions, owned by the fixture */
   std::vector<AbstractExpressionRef> allocated_exprs_;
 
