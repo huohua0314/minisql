@@ -165,6 +165,14 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
   new_table_meta->SerializeTo(buf);
   table_info = new_table_info;
   FlushCatalogMetaPage();
+  for(auto iter:schema->GetColumns())
+  {
+    if(iter->IsUnique())
+    {
+      IndexInfo *temp;
+      CreateIndex(table_name,"_index_"+to_string(next_index_id_),{iter->GetName()},nullptr,temp,"Bptree");
+    }
+  }
   buffer_pool_manager_->UnpinPage(new_table_page,true);
   buffer_pool_manager_->FlushPage(new_table_page);
   #ifdef CATALOG_DEBUG
@@ -372,6 +380,23 @@ dberr_t CatalogManager::DropIndex(const string &table_name, const string &index_
 
 }
 
+dberr_t CatalogManager::DropIndex(const string &index_name)
+{
+  string table_name;
+  for(auto iter:index_names_)
+  {
+    for(auto it:iter.second)
+    {
+      if(it.first.compare(index_name)==0)
+      {
+        table_name = iter.first;
+        return DropIndex(table_name,index_name);
+        break;
+      }
+    }
+  }
+  return DB_FAILED;
+}
 /**
  * TODO: Student Implement
  */

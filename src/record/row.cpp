@@ -8,7 +8,7 @@ uint32_t Row::SerializeTo(char *buf, Schema *schema) const {
   ASSERT(schema->GetColumnCount() == fields_.size(), "Fields size do not match schema's column size.");
   uint32_t offset = 0;
   uint32_t num = fields_.size();
-  MACH_WRITE_TO(uint32_t,buf+offset,num);
+ MACH_WRITE_TO(uint32_t,buf+offset,num);
   offset += sizeof(uint32_t);
   #ifdef RECORD_DEBUG 
       LOG(INFO) <<"Row serialize Begin"<< std::endl;

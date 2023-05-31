@@ -41,7 +41,7 @@ TEST(DiskManagerTest, FreePageAllocationTest) {
   int extent_nums = 2;
   for (uint32_t i = 0; i < DiskManager::BITMAP_SIZE * extent_nums; i++) {
     page_id_t page_id = disk_mgr->AllocatePage();
-    // std::cout << "page_id " << page_id << std::endl; 
+    std::cout << "page_id " << page_id << std::endl; 
     ASSERT_FALSE(disk_mgr->IsPageFree(page_id));
     DiskFileMetaPage *meta_page = reinterpret_cast<DiskFileMetaPage *>(disk_mgr->GetMetaData());
     EXPECT_EQ(i, page_id);

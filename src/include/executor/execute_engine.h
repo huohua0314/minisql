@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <map>
 
 #include "common/dberr.h"
 #include "common/instance.h"
@@ -73,6 +74,14 @@ class ExecuteEngine {
   dberr_t ExecuteExecfile(pSyntaxNode ast, ExecuteContext *context);
 
   dberr_t ExecuteQuit(pSyntaxNode ast, ExecuteContext *context);
+
+  bool judge(int &len,const string number);
+
+  void DrawName(const string ,int);
+
+  void DrawUp(int);
+
+  void DrawName_(const string name,int len);
 
  private:
   std::unordered_map<std::string, DBStorageEngine *> dbs_; /** all opened databases */

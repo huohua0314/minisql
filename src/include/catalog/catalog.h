@@ -92,7 +92,14 @@ class CatalogManager {
 
   dberr_t DropTable(const std::string &table_name);
 
+  std::unordered_map<std::string, std::unordered_map<std::string, index_id_t>> GetAllIndexs()
+  {
+    return index_names_;
+  }
+
   dberr_t DropIndex(const std::string &table_name, const std::string &index_name);
+
+  dberr_t DropIndex(const string &index_name);
 
  private:
   dberr_t DropTable(table_id_t table_id);

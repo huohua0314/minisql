@@ -32,21 +32,35 @@ bool SeqScanExecutor::Next(Row *row, RowId *rid) {
     
     Row temp = *table_iterator_;
     auto exprs = plan_->filter_predicate_;
-    auto values = exprs->Evaluate(&temp);
-    if(values.CompareEquals(Field(kTypeInt,1))) 
+    if(exprs!=nullptr)
     {
-      temp.GetKeyFromRow(table_schema,out_schema,*row);
-      *rid = temp.GetRowId();
-      row->SetRowId(temp.GetRowId());
-      table_iterator_++;
-      #ifdef EXECUTE_DEBUG
-        LOG(INFO) << "RowId: page:" << rid->GetPageId()<<" solt_num:" <<rid->GetSlotNum()<<std::endl;
-      #endif
-      return true;
+      auto values = exprs->Evaluate(&temp);
+      if(values.CompareEquals(Field(kTypeInt,1))) 
+      {
+        temp.GetKeyFromRow(table_schema,out_schema,*row);
+        *rid = temp.GetRowId();
+        row->SetRowId(temp.GetRowId());
+        table_iterator_++;
+        #ifdef EXECUTE_DEBUG
+          LOG(INFO) << "RowId: page:" << rid->GetPageId()<<" solt_num:" <<rid->GetSlotNum()<<std::endl;
+        #endif
+        return true;
+      }
+      else
+      {
+        table_iterator_++;
+      }
     }
     else
     {
-      table_iterator_++;
+       temp.GetKeyFromRow(table_schema,out_schema,*row);
+        *rid = temp.GetRowId();
+        row->SetRowId(temp.GetRowId());
+        table_iterator_++;
+        #ifdef EXECUTE_DEBUG
+          LOG(INFO) << "RowId: page:" << rid->GetPageId()<<" solt_num:" <<rid->GetSlotNum()<<std::endl;
+        #endif
+        return true;
     }
   }
 }

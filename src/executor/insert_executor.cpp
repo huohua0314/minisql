@@ -23,11 +23,26 @@ bool InsertExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
     for(auto iter: all_Index)
     {
       vector<RowId> result;
-      if(iter->GetIndex()->ScanKey(temp,result,nullptr) == DB_SUCCESS)
+      Row key_row;
+      temp.GetKeyFromRow(table->GetSchema(),iter->GetIndexKeySchema(),key_row);
+      if(iter->GetIndex()->ScanKey(key_row,result,nullptr) == DB_SUCCESS)
       {
         flag = false;
         break;
       }
+    }
+    int cur = 0;
+    for(auto iter:table->GetSchema()->GetColumns())
+    {
+      if(temp.GetField(cur)->IsNull())
+      {
+        if(table->GetSchema()->GetColumn(cur)->IsNullable()==false)
+        {
+          flag = false;
+          break;
+        }
+      }
+      cur ++ ;
     }
     if(flag == true)
     {
@@ -36,11 +51,13 @@ bool InsertExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
         for(auto it: all_Index)
         {
           dberr_t test;
-          test = it->GetIndex()->InsertEntry(temp,temp_id,nullptr);
+          Row key_row;
+          temp.GetKeyFromRow(table->GetSchema(),it->GetIndexKeySchema(),key_row);
+          test = it->GetIndex()->InsertEntry(key_row,temp.GetRowId(),nullptr);
           ASSERT(test == DB_SUCCESS,"insert not success");
         }
       }
-      
+      return true ;
     }
   }
     return false;
