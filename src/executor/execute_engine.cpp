@@ -382,6 +382,7 @@ dberr_t ExecuteEngine::ExecuteShowTables(pSyntaxNode ast, ExecuteContext *contex
   for(auto iter:table_infoes)
   {
     DrawName(iter->GetTableName(),max_len);
+    cout << "|";
     DrawUp(max_len);
   }
 

@@ -84,6 +84,8 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
     {
       auto page = reinterpret_cast<char *>(buffer_pool_manager->FetchPage(CATALOG_META_PAGE_ID));
       catalog_meta_ = CatalogMeta::DeserializeFrom(page);
+      next_index_id_ = catalog_meta_->GetNextIndexId();
+      next_table_id_ = catalog_meta_->GetNextTableId();
       for(auto iter :catalog_meta_->table_meta_pages_)
       {
         char *temp = reinterpret_cast<char *>(buffer_pool_manager->FetchPage(iter.second));
@@ -170,7 +172,7 @@ dberr_t CatalogManager::CreateTable(const string &table_name, TableSchema *schem
     if(iter->IsUnique())
     {
       IndexInfo *temp;
-      CreateIndex(table_name,"_index_"+to_string(next_index_id_),{iter->GetName()},nullptr,temp,"Bptree");
+      CreateIndex(table_name,"index_"+to_string(next_index_id_)+"_"+table_name,{iter->GetName()},nullptr,temp,"Bptree");
     }
   }
   buffer_pool_manager_->UnpinPage(new_table_page,true);
@@ -266,7 +268,7 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
     if(temp->GetIndexMetaData()->GetKeyMapping()==key_map)
     {
       #ifdef CATALOG_DEBUG
-        LOG(WARNING) << "end CreateIndex index:"<<table_name<<" index:"<<index_name <<"index exist" <<std::endl;
+        LOG(WARNING) << "End CreateIndex index:"<<table_name<<" index:"<<index_name <<"index exist" <<std::endl;
       #endif
 
     return DB_INDEX_ALREADY_EXIST;
@@ -281,6 +283,15 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
   indexes_[new_index_id] = new_index_info;
   index_names_[table_name][index_name] = new_index_id;
   catalog_meta_->index_meta_pages_[new_index_id] = new_index_page;
+
+  auto iter = table_info->GetTableHeap()->Begin(nullptr);
+  while(iter != table_info->GetTableHeap()->End())
+  {
+    Row key_row;
+    (*iter).GetKeyFromRow(table_info->GetSchema(),new_index_info->GetIndexKeySchema(),key_row);
+    new_index_info->GetIndex()->InsertEntry(key_row,iter.rowId,nullptr);
+    iter++;
+  }
   FlushCatalogMetaPage() ;
   buffer_pool_manager_->UnpinPage(new_index_page,true);
   buffer_pool_manager_->FlushPage(new_index_page);

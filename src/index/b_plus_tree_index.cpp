@@ -9,7 +9,7 @@ BPlusTreeIndex::BPlusTreeIndex(index_id_t index_id, IndexSchema *key_schema, siz
       processor_(key_schema_, key_size),
       container_(index_id, buffer_pool_manager, processor_) {}
 
-dberr_t BPlusTreeIndex::InsertEntry(const Row &key, RowId row_id, Transaction *txn) {
+dberr_t BPlusTreeIndex::InsertEntry(const Row &key, RowId row_id, Transaction *txn =nullptr) {
   // ASSERT(row_id.Get() != INVALID_ROWID.Get(), "Invalid row id for index insert.");
   GenericKey *index_key = processor_.InitKey();
   processor_.SerializeFromKey(index_key, key, key_schema_);

@@ -186,7 +186,7 @@ void TableHeap::DeleteTable(page_id_t page_id) {
 /**
  * TODO: Student Implement
  */
-TableIterator TableHeap::Begin(Transaction *txn) {
+TableIterator TableHeap::Begin(Transaction *txn = nullptr) {
   return TableIterator(first_page_id_,buffer_pool_manager_,schema_);
 }
 
