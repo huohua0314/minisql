@@ -70,15 +70,7 @@ class IndexInfo {
       meta_data_ = meta_data;
       key_schema_ = Schema::ShallowCopySchema(table_info->GetSchema(),meta_data_->GetKeyMapping());
       index_ = CreateIndex(buffer_pool_manager,"bptree");
-      auto iter = table_info->GetTableHeap()->Begin(nullptr);
-      auto end = table_info->GetTableHeap()->End();
-      while(iter!=end)
-      {
-        Row temp;
-        (*iter).GetKeyFromRow(table_info->GetSchema(),key_schema_,temp);
-        index_->InsertEntry(temp,iter.rowId,nullptr);
-        iter++;
-      }
+  
   }
 
   inline Index *GetIndex() { return index_; }
@@ -86,6 +78,8 @@ class IndexInfo {
   std::string GetIndexName() { return meta_data_->GetIndexName(); }
 
   IndexSchema *GetIndexKeySchema() { return key_schema_; }
+
+  inline  IndexMetadata * GetIndexMetaData() {return meta_data_;}
 
  private:
   explicit IndexInfo() : meta_data_{nullptr}, index_{nullptr}, key_schema_{nullptr} {}

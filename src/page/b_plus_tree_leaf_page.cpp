@@ -54,9 +54,9 @@ void LeafPage::SetNextPageId(page_id_t next_page_id) {
  * 二分查找
  */
 int LeafPage::KeyIndex(const GenericKey *key, const KeyManager &KM) {
-  for(int i=0;i<GetSize();i++)
+ for(int i=0;i<GetSize();i++)
   {
-    if(KM.CompareKeys(KeyAt(i),key)>0)
+    if(KM.CompareKeys(KeyAt(i),key)>=0)
       return i;
   }
   LOG(WARNING) << "could fund index" <<std::endl;
@@ -72,9 +72,9 @@ GenericKey *LeafPage::KeyAt(int index) {
 }
 
 void LeafPage::SetKeyAt(int index, GenericKey *key) {
-  LOG(ERROR) << LEAF_PAGE_HEADER_SIZE + index * pair_size + key_off+GetKeySize() <<std::endl;
-  cout << "pair_size" << pair_size << " keySize:" << GetKeySize()<<"index:"<<index<<endl;
-  LOG(INFO) <<"??";
+  // LOG(ERROR) << LEAF_PAGE_HEADER_SIZE + index * pair_size + key_off+GetKeySize() <<std::endl;
+  // cout << "pair_size" << pair_size << " keySize:" << GetKeySize()<<"index:"<<index<<endl;
+  // LOG(INFO) <<"??";
   memcpy(pairs_off + index * pair_size + key_off, key, GetKeySize());
 }
 
@@ -118,7 +118,7 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
   #endif
   if(GetSize()==GetMaxSize())
   {
-    LOG(WARNING) << "leaf page full, need spilt" << std::endl;
+    // LOG(WARNING) << "leaf page full, need spilt" << std::endl;
   }
   for(i=0;i<GetSize();i++)
   {
@@ -223,6 +223,21 @@ int LeafPage::findIndex(const GenericKey *key, const KeyManager &KM)
     for(int i=0;i<GetSize();i++) 
     {
       if(KM.CompareKeys(key,KeyAt(i))==0)
+    {
+      #ifdef BTREE_DEBUG
+      LOG(WARNING) << "end loop up in leaf" << std::endl;
+      #endif
+      return i;
+    }
+    }
+    return -1;
+}
+
+int LeafPage::findLarge(const GenericKey *key, const KeyManager &KM)
+{
+   for(int i=0;i<GetSize();i++) 
+    {
+      if(KM.CompareKeys(key,KeyAt(i))<=0)
     {
       #ifdef BTREE_DEBUG
       LOG(WARNING) << "end loop up in leaf" << std::endl;

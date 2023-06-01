@@ -4,13 +4,13 @@
 */
 bool Cmp(RowId a,RowId b)
 {
-  if(a.GetPageId()>b.GetPageId())
+  if(a.GetPageId() < b.GetPageId())
   {
     return true;
   }
   else if(a.GetPageId()==b.GetPageId())
   {
-    return a.GetSlotNum() >= b.GetSlotNum();
+    return a.GetSlotNum() < b.GetSlotNum();
   }
   else return false;
 }
@@ -22,6 +22,10 @@ void IndexScanExecutor::Init() {
   result.clear();
   vector<vector<RowId>> all_row_id;
   GetRowId(all_row_id,plan_->GetPredicate());
+  for(auto it : all_row_id)
+  {
+      sort(it.begin(),it.end(),Cmp);
+  }
   result = all_row_id[0];
   for(int i=1;i<all_row_id.size();i++) 
   {
@@ -36,8 +40,6 @@ bool IndexScanExecutor::Next(Row *row, RowId *rid) {
   TableInfo * table;
   exec_ctx_->GetCatalog()->GetTable(plan_->GetTableName(),table);
   auto heap = table->GetTableHeap();
-  Row temp;
-  RowId temp_id;
   while(1){
     if(cursor_ >= result.size()) 
     {
@@ -45,6 +47,8 @@ bool IndexScanExecutor::Next(Row *row, RowId *rid) {
     }
     else
     {
+      Row temp;
+      RowId temp_id;
       temp_id = result[cursor_++];
       temp.SetRowId(temp_id);
       if(heap->GetTuple(&temp,nullptr))
@@ -85,14 +89,18 @@ void IndexScanExecutor::GetRowId(vector<vector<RowId>> &all , AbstractExpression
   uint32_t table_index = column->GetColIdx();
   vector<Field> key_field{constant->Evaluate(nullptr)};
   IndexInfo * index;
+  bool if_index = false;
   for(auto iter:plan_->indexes_)
   {
     if(iter->GetIndexKeySchema()->GetColumn(0)->GetTableInd()==table_index)
     {
       index = iter;
+      if_index = true;
       break;
     }
   }
+  if(if_index==false)
+    return;
   Row key(key_field);
   std::string com_type = compare->GetComparisonType();
   ASSERT(com_type!="INVAILD_COMPARE_TYPE","invaild compare type");

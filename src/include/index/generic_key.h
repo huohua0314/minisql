@@ -45,6 +45,7 @@ class KeyManager {
       Field *lhs_value = lhs_key.GetField(i);
       Field *rhs_value = rhs_key.GetField(i);
 
+
       if (lhs_value->CompareLessThan(*rhs_value) == CmpBool::kTrue) {
         return -1;
       }

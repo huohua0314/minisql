@@ -78,7 +78,7 @@ dberr_t BPlusTreeIndex::ScanKey(const Row &key, vector<RowId> &result, Transacti
 }
 
 dberr_t BPlusTreeIndex::Destroy() {
-  container_.Destroy();
+  container_.Destroy(container_.root_page_id_);
   return DB_SUCCESS;
 }
 

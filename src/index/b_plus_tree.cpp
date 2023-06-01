@@ -21,8 +21,8 @@ BPlusTree::BPlusTree(index_id_t index_id, BufferPoolManager *buffer_pool_manager
       {
         int length = KM.GetKeySize() + sizeof(RowId);
         leaf_max_size_ = (((PAGE_SIZE - LEAF_PAGE_HEADER_SIZE) / length) - 1);
-        cout << "lenth:"<<length<<endl;
-        cout <<"aaa" <<PAGE_SIZE - LEAF_PAGE_HEADER_SIZE<<endl;
+        // cout << "lenth:"<<length<<endl;
+        // cout <<"aaa" <<PAGE_SIZE - LEAF_PAGE_HEADER_SIZE<<endl;
       }
       if(internal_max_size_==UNDEFINED_SIZE)
       {
@@ -35,6 +35,23 @@ BPlusTree::BPlusTree(index_id_t index_id, BufferPoolManager *buffer_pool_manager
 }
 
 void BPlusTree::Destroy(page_id_t current_page_id) {
+  if(current_page_id == INVALID_PAGE_ID)
+  {
+    return;
+  }
+  auto b_page = reinterpret_cast<BPlusTreePage *>(buffer_pool_manager_->FetchPage(current_page_id)) ;
+  if(b_page->IsLeafPage())
+  {
+    buffer_pool_manager_->DeletePage(b_page->GetPageId());
+    return;
+  }
+  
+  auto i_page = reinterpret_cast<InternalPage *>(b_page) ;
+  for(int i=0;i<i_page->GetSize();i++)
+  {
+    Destroy(i_page->ValueAt(i));
+  }
+  buffer_pool_manager_->DeletePage(i_page->GetPageId());
 }
 
 /*
@@ -72,7 +89,7 @@ bool BPlusTree::GetValue(const GenericKey *key, std::vector<RowId> &result, Tran
     else
     {
       buffer_pool_manager_->UnpinPage(temp->GetPageId(),false);
-      LOG(WARNING) << "lookup fail" <<std::endl;
+      // LOG(WARNING) << "lookup fail" <<std::endl;
       return false;
     }
 }
@@ -200,7 +217,7 @@ void BPlusTree::InsertIntoParent(BPlusTreePage *old_node, GenericKey *key, BPlus
   page_id_t new_root;
   if(parent_page == INVALID_PAGE_ID)
   {
-    LOG(ERROR) << "get new root" << std::endl;
+    // LOG(ERROR) << "get new root" << std::endl;
     auto new_page = reinterpret_cast<BPlusTreeInternalPage *>(buffer_pool_manager_->NewPage(new_root)) ;
     new_page->Init(new_root,INVALID_PAGE_ID,processor_.GetKeySize(),internal_max_size_);
     new_page->PopulateNewRoot(old_node->GetPageId(),key,new_node->GetPageId());
@@ -263,7 +280,7 @@ void BPlusTree::Remove(const GenericKey *key, Transaction *transaction) {
   }
   else{
     buffer_pool_manager_->UnpinPage(leaf->GetPageId(),false);
-    LOG(WARNING) << "delete index not found" << std::endl;
+    // LOG(WARNING) << "delete index not found" << std::endl;
   }
   #ifdef BTREE_DEBUG
   LOG(WARNING) << "END REMOVE----------------------------" << std::endl;
@@ -555,8 +572,12 @@ IndexIterator BPlusTree::Begin() {
  */
 IndexIterator BPlusTree::Begin(const GenericKey *key) {
   auto page = reinterpret_cast<LeafPage *> (FindLeafPage(key,root_page_id_,false));
-  int index = page->findIndex(key,processor_);
-  return IndexIterator(page->GetPageId(),buffer_pool_manager_,index);
+  int index = page->KeyIndex(key, processor_);
+  LOG(ERROR) <<"Index:" <<index <<std::endl;
+  if(index==-1)
+    return End();
+  else
+    return IndexIterator(page->GetPageId(),buffer_pool_manager_,index);
 }
 
 /*
@@ -594,7 +615,7 @@ Page *BPlusTree::FindLeafPage(const GenericKey *key, page_id_t new_page_id, bool
       }
       else
       {
-        cout << "test:"<<endl;
+        // cout << "test:"<<endl;
         auto internal = reinterpret_cast<BPlusTreeInternalPage *> (page);
         buffer_pool_manager_->UnpinPage(page_id,false);
         if(!leftMost)

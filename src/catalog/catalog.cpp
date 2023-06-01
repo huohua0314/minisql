@@ -88,7 +88,7 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
       {
         char *temp = reinterpret_cast<char *>(buffer_pool_manager->FetchPage(iter.second));
         auto test = reinterpret_cast<TableMetadata *>(temp);
-        TableMetadata *table_meta;
+        TableMetadata *table_meta(nullptr);
         TableHeap *table_heap;
         TableInfo * table_info = TableInfo::Create();
         TableMetadata::DeserializeFrom(temp,table_meta);
@@ -102,7 +102,7 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
       for(auto iter : catalog_meta_->index_meta_pages_)
       {
         char *temp = reinterpret_cast<char *>(buffer_pool_manager->FetchPage(iter.second));
-        IndexMetadata * index_meta;
+        IndexMetadata * index_meta(nullptr);
         IndexMetadata::DeserializeFrom(temp,index_meta);
         IndexInfo *index_info = IndexInfo::Create();
         index_info->Init(index_meta,tables_[index_meta->GetTableId()],buffer_pool_manager);
@@ -258,6 +258,20 @@ dberr_t CatalogManager::CreateIndex(const std::string &table_name, const string 
     else
       return test;
   }
+  bool if_multi = false;
+  for(auto iter:index_names_[table_name])
+  {
+    IndexInfo * temp;
+    temp = indexes_[iter.second];
+    if(temp->GetIndexMetaData()->GetKeyMapping()==key_map)
+    {
+      #ifdef CATALOG_DEBUG
+        LOG(WARNING) << "end CreateIndex index:"<<table_name<<" index:"<<index_name <<"index exist" <<std::endl;
+      #endif
+
+    return DB_INDEX_ALREADY_EXIST;
+    }
+  }
   index_id_t new_index_id = next_index_id_ ++;
   IndexMetadata *new_index_meta = IndexMetadata::Create(new_index_id,index_name,table_id,key_map);
   IndexInfo *new_index_info = IndexInfo::Create();
@@ -325,18 +339,22 @@ dberr_t CatalogManager::DropTable(const string &table_name) {
   table_id_t drop_table_id;
   page_id_t drop_page;
   drop_table_id = table_names_[table_name];
-  table_names_.erase(table_name);
   tables_[drop_table_id]->GetTableHeap()->FreeTableHeap();
+ 
+  vector<string> index_name;
+   for(auto iter:index_names_[table_name])
+  {
+    index_name.push_back(iter.first);
+  }
+  for(auto it:index_name)
+  {
+    DropIndex(table_name,it);
+  }
 
   delete tables_[drop_table_id];
   tables_.erase(drop_table_id);
-  for(auto iter:index_names_[table_name])
-  {
-    delete indexes_[iter.second];
-    indexes_.erase(iter.second);
-    DropIndex(table_name,iter.first);
-  }
-  
+  table_names_.erase(table_name);
+  index_names_.erase(table_name);
   drop_page = catalog_meta_->table_meta_pages_[drop_table_id];
   buffer_pool_manager_->DeletePage(drop_page);
 
@@ -374,6 +392,7 @@ dberr_t CatalogManager::DropIndex(const string &table_name, const string &index_
   catalog_meta_->index_meta_pages_.erase(drop_index_id);
   
   drop_index_info->GetIndex()->Destroy();
+  buffer_pool_manager_->DeletePage(drop_page);
   delete drop_index_info;
   FlushCatalogMetaPage();
   return DB_SUCCESS;

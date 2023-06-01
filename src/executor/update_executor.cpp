@@ -31,8 +31,11 @@ bool UpdateExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
     table_info_->GetTableHeap()->UpdateTuple(update_row,update_row.GetRowId(),nullptr);
     for(auto iter:index_info_)
     {
-      iter->GetIndex()->RemoveEntry(temp,temp.GetRowId(),nullptr);
-      iter->GetIndex()->InsertEntry(update_row,update_row.GetRowId(),nullptr);
+       Row key_row ,u_row;
+      temp.GetKeyFromRow(table_info_->GetSchema(),iter->GetIndexKeySchema(),key_row);
+      update_row.GetKeyFromRow(table_info_->GetSchema(),iter->GetIndexKeySchema(),u_row);
+      iter->GetIndex()->RemoveEntry(key_row,temp.GetRowId(),nullptr);
+      iter->GetIndex()->InsertEntry(u_row,update_row.GetRowId(),nullptr);
     }
     return true;
   }

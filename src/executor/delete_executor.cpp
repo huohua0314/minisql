@@ -28,7 +28,9 @@ bool DeleteExecutor::Next([[maybe_unused]] Row *row, RowId *rid) {
     table_info_ -> GetTableHeap()->ApplyDelete(row_id,nullptr);
     for(auto iter: indexes_)
     {
-      iter->GetIndex()->RemoveEntry(temp,row_id,nullptr);
+      Row key_row;
+      temp.GetKeyFromRow(table_info_->GetSchema(),iter->GetIndexKeySchema(),key_row);
+      iter->GetIndex()->RemoveEntry(key_row,row_id,nullptr);
     }
     return true;
   }

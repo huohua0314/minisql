@@ -127,7 +127,7 @@ int InternalPage::InsertNodeAfter(const page_id_t &old_value, GenericKey *new_ke
   int index = ValueIndex(old_value);
    if(GetSize()==GetMaxSize())
   {
-    LOG(WARNING) << "internal page full, need spilt" << std::endl;
+    // LOG(WARNING) << "internal page full, need spilt" << std::endl;
   }
   if(index==-1)
   {

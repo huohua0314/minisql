@@ -50,6 +50,8 @@ class BPlusTreeLeafPage : public BPlusTreePage {
 
   void SetValueAt(int index, RowId value);
 
+  int findLarge(const GenericKey *key, const KeyManager &KM);
+
   int KeyIndex(const GenericKey *key, const KeyManager &comparator);
   int findIndex(const GenericKey *key, const KeyManager &comparator);
 

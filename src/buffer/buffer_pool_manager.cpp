@@ -121,7 +121,7 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
     page_id = disk_manager_->AllocatePage();
     pair<page_id_t,frame_id_t> p1(page_id,new_frame);
     page_table_.insert(p1);
-    LOG(WARNING) <<"NewPage:"<<page_id << endl;
+    // LOG(WARNING) <<"NewPage:"<<page_id << endl;
     #ifdef ENABLE_BPM_DEBUG
       LOG(INFO) <<"get from freelist page_id:" <<page_id << endl;
     #endif 
@@ -179,9 +179,9 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
   // 1.   If P does not exist, return true.
   // 2.   If P exists, but has a non-zero pin-count, return false. Someone is using the page.
   // 3.   Otherwise, P can be deleted. Remove P from the page table, reset its metadata and return it to the free list.
-  #ifdef ENABLE_BPM_DEBUG
+  // #ifdef ENABLE_BPM_DEBUG
       LOG(INFO) <<"start delete page id:" <<page_id << endl;
-    #endif 
+    // #endif 
   if(page_table_.count(page_id) == 0) //no such page
   {
     #ifdef ENABLE_BPM_DEBUG

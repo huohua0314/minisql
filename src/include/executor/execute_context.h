@@ -4,7 +4,7 @@
 
 #ifndef MINISQL_EXECUTE_CONTEXT_H
 #define MINISQL_EXECUTE_CONTEXT_H
-#define EXECUTE_DEBUG EXECUTE_DEBUG
+// #define EXECUTE_DEBUG EXECUTE_DEBUG
 #include "buffer/buffer_pool_manager.h"
 #include "catalog/catalog.h"
 #include "common/macros.h"

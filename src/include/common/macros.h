@@ -1,8 +1,8 @@
 #ifndef MINISQL_MACROS_H
 #define MINISQL_MACROS_H
 // #define RECORD_DEBUG RECORD_DEBUGA
-#define BTREE_DEBUG BTREE_DEBUG_
-#define CATALOG_DEBUG CATALOG_DEBUG_
+// #define BTREE_DEBUG BTREE_DEBUG_
+// #define CATALOG_DEBUG CATALOG_DEBUG_
 #include <cassert>
 
 #define ASSERT(expr, message) assert((expr) && (message))

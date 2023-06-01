@@ -21,6 +21,10 @@ std::pair<GenericKey *, RowId> IndexIterator::operator*() {
 }
 
 IndexIterator &IndexIterator::operator++() {
+  if(current_page_id==INVALID_PAGE_ID)
+  {
+    return *this;
+  }
   if(item_index < page->GetSize()-1)
   {
     item_index++;

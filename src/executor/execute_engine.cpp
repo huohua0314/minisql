@@ -157,6 +157,11 @@ dberr_t ExecuteEngine::Execute(pSyntaxNode ast) {
       break;
   }
   // Plan the query.
+  if(context ==nullptr)
+  {
+    cout << "choose databaase";
+    return DB_FAILED;
+  }
   Planner planner(context.get());
   std::vector<Row> result_set{};
   try {
@@ -294,8 +299,17 @@ dberr_t ExecuteEngine::ExecuteDropDatabase(pSyntaxNode ast, ExecuteContext *cont
     return DB_NOT_EXIST;
   }
 
+  vector<TableInfo *> table_infos;
+  dbs_[table_name]->catalog_mgr_->GetTables(table_infos);
+  for(auto iter:table_infos)
+  {
+    dbs_[table_name]->catalog_mgr_->DropTable(iter->GetTableName());
+  }
   delete dbs_[table_name];
   dbs_.erase(table_name);
+  string db_file_name_ = "./databases/" + table_name;
+  remove(db_file_name_.c_str());
+  current_db_.clear();
   return DB_SUCCESS;
 }
 
@@ -542,9 +556,10 @@ dberr_t ExecuteEngine::ExecuteShowIndexes(pSyntaxNode ast, ExecuteContext *conte
       m_table_len = iter.second.size();
     }
   }
-  DrawUp(m_index_len + m_table_len+6);
+  DrawUp(m_index_len + m_table_len+5);
   DrawName_("Index_name",m_index_len);
   DrawName_("Table_name",m_table_len);
+  cout<<"|";
   cout << endl;
   DrawUp(m_index_len + m_table_len+5);
   for(auto iter:temp)
@@ -553,6 +568,7 @@ dberr_t ExecuteEngine::ExecuteShowIndexes(pSyntaxNode ast, ExecuteContext *conte
     {
       DrawName_(it.first,m_index_len);
       DrawName_(iter.first,m_table_len);
+      cout <<"|";
       cout <<endl;
     }
     DrawUp(m_index_len + m_table_len+5);
@@ -592,6 +608,7 @@ dberr_t ExecuteEngine::ExecuteCreateIndex(pSyntaxNode ast, ExecuteContext *conte
   while(ast!=nullptr)
   {
     index_keys.push_back(string(ast->val_));
+    ast = ast->next_;
   }
 
   return context->GetCatalog()->CreateIndex(table_name,index_name,index_keys,nullptr,dump,dump_string);
@@ -714,6 +731,6 @@ void ExecuteEngine:: DrawName_(const string name,int len)
 {
   cout <<"|";
   cout <<"  ";
-  cout <<std::left << setw(len) <<name << "  |" ;
+  cout <<std::left << setw(len) <<name << "  " ;
 }
 
