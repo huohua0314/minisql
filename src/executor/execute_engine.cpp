@@ -382,7 +382,6 @@ dberr_t ExecuteEngine::ExecuteShowTables(pSyntaxNode ast, ExecuteContext *contex
   for(auto iter:table_infoes)
   {
     DrawName(iter->GetTableName(),max_len);
-    cout << "|";
     DrawUp(max_len);
   }
 
@@ -668,6 +667,7 @@ dberr_t ExecuteEngine::ExecuteExecfile(pSyntaxNode ast, ExecuteContext *context)
   name = "../testfile/" + name;
   ifstream in_file;
   in_file.open(name);
+  auto start_time = std::chrono::system_clock::now();
   if(in_file.is_open())
   {
     string cmd;
@@ -679,6 +679,10 @@ dberr_t ExecuteEngine::ExecuteExecfile(pSyntaxNode ast, ExecuteContext *context)
       yyparse();
       Execute(MinisqlGetParserRootNode());
     }
+    auto stop_time = std::chrono::system_clock::now();
+    double duration_time =
+      double((std::chrono::duration_cast<std::chrono::milliseconds>(stop_time - start_time)).count());
+    cout << duration_time /1000 <<" sec" <<endl;
     return DB_SUCCESS;
   }
   else
@@ -725,7 +729,7 @@ void ExecuteEngine::DrawUp(int len)
 }
 void ExecuteEngine:: DrawName(const string name,int len)
 {
-  DrawName_(name,len);
+  DrawName_(name,len);cout<<"|";
   cout << endl;
 }
 void ExecuteEngine:: DrawName_(const string name,int len)

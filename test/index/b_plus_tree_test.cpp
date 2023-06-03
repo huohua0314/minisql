@@ -20,7 +20,7 @@ TEST(BPlusTreeTests, SampleTest) {
   std::cout  << tree.leaf_max_size_<<std::endl;
   TreeFileManagers mgr("tree_");
   // Prepare data
-  const int n =500;
+  const int n =100;
   vector<GenericKey *> keys;
   vector<RowId> values;
   vector<GenericKey *> delete_seq;

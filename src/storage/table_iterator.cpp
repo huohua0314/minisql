@@ -27,7 +27,7 @@ TableIterator::TableIterator(page_id_t const first_page,BufferPoolManager * buff
   }
   if(!page->GetFirstTupleRid(&rowId))
   {
-     LOG(WARNING) << "Iterator fetch first row failed" << std::endl;
+    //  LOG(WARNING) << "Iterator fetch first row failed" << std::endl;
      count = 0;
      buffer->UnpinPage(first_page,false);
     rowId.Set(INVALID_PAGE_ID,INVALID_PAGE_ID);

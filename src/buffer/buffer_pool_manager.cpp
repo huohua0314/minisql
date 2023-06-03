@@ -17,7 +17,7 @@ BufferPoolManager::BufferPoolManager(size_t pool_size, DiskManager *disk_manager
 
 BufferPoolManager::~BufferPoolManager() {
   for (auto page : page_table_) {
-    LOG(WARNING) << page.first <<endl;
+    // LOG(WARNING) << page.first <<endl;
     FlushPage(page.first);
   }
   delete[] pages_;
@@ -72,7 +72,7 @@ Page *BufferPoolManager::FetchPage(page_id_t page_id) {
         {
           if(FlushPage(pages_[new_frame].GetPageId()) == 0)
           {
-            LOG(WARNING) << "FLUSHPAGE when Fetch page fail" << endl;
+            // LOG(WARNING) << "FLUSHPAGE when Fetch page fail" << endl;
           }
         }
         disk_manager_->ReadPage(page_id,pages_[new_frame].data_);
@@ -107,7 +107,7 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
   // 3.   Update P's metadata, zero out memory and add P to the page table.
   // 4.   Set the page ID output parameter. Return a pointer to P.
   #ifdef ENABLE_BPM_DEBUG
-      LOG(INFO) <<"start get new Page" <<page_id << endl;
+      LOG(INFO) <<"start get new Page"  << endl;
     #endif 
   if(free_list_.size() > 0)
   {
@@ -123,7 +123,7 @@ Page *BufferPoolManager::NewPage(page_id_t &page_id) {
     page_table_.insert(p1);
     // LOG(WARNING) <<"NewPage:"<<page_id << endl;
     #ifdef ENABLE_BPM_DEBUG
-      LOG(INFO) <<"get from freelist page_id:" <<page_id << endl;
+      LOG(WARNING) <<"get from freelist page_id:" <<page_id << endl;
     #endif 
     disk_manager_->ReadPage(page_id,pages_[new_frame].data_);
     pages_[new_frame].page_id_ = page_id;
@@ -180,8 +180,9 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
   // 2.   If P exists, but has a non-zero pin-count, return false. Someone is using the page.
   // 3.   Otherwise, P can be deleted. Remove P from the page table, reset its metadata and return it to the free list.
   // #ifdef ENABLE_BPM_DEBUG
-      LOG(INFO) <<"start delete page id:" <<page_id << endl;
+      // LOG(INFO) <<"start delete page id:" <<page_id << endl;
     // #endif 
+  // LOG(ERROR) << "DELETE PAGE "<< page_id <<"************************";
   if(page_table_.count(page_id) == 0) //no such page
   {
     #ifdef ENABLE_BPM_DEBUG
@@ -196,14 +197,13 @@ bool BufferPoolManager::DeletePage(page_id_t page_id) {
       #ifdef ENABLE_BPM_DEBUG
       LOG(INFO) <<"deleted page fail for pin_count > 0" << endl;
       #endif
+      return false;
     }
     else //page unpined
     {
       int frame_id = page_table_[page_id];
-      if(pages_[frame_id].IsDirty())
-      {
-        FlushPage(page_id);
-      }
+      pages_[frame_id].ResetMemory();
+      FlushPage(page_id);
       dynamic_cast <LRUReplacer *> (replacer_) ->Remove(frame_id);
       page_table_.erase(page_id);
       free_list_.push_back(frame_id);
@@ -248,7 +248,7 @@ bool BufferPoolManager::UnpinPage(page_id_t page_id, bool is_dirty) {
 bool BufferPoolManager::FlushPage(page_id_t page_id) {
   if(page_table_.count(page_id)==0)
   {
-    LOG(WARNING) << "page couldn't be flush for it not in buffer" << endl;
+    // LOG(WARNING) << "page couldn't be flush for it not in buffer" << endl;
     return false;
   }
   else

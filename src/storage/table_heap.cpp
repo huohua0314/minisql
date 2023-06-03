@@ -53,10 +53,12 @@ bool TableHeap::InsertTuple(Row &row, Transaction *txn) {
 
     if(page2->InsertTuple(row,schema_,txn,lock_manager_,log_manager_))
     {
+      buffer_pool_manager_->UnpinPage(next,true);
       return true;
     }
     else
     {
+      buffer_pool_manager_->UnpinPage(next,false);
       ASSERT(false,"Insert into new page fail");
       return false;
     }
@@ -107,17 +109,17 @@ bool TableHeap::UpdateTuple( Row &row, const RowId &rid, Transaction *txn) {
   }
   if(type == 2)
   {
-    LOG(WARNING) << "UpdateTuple is deleted" << std::endl;
+    // LOG(WARNING) << "UpdateTuple is deleted" << std::endl;
     buffer_pool_manager_->UnpinPage(page->GetPageId(),false);
     return false;
   }
   else if(type == 1)
   {
-    LOG(INFO) << "update recorf too large, now d and i" << std::endl;
+    // LOG(INFO) << "update recorf too large, now d and i" << std::endl;
     page->ApplyDelete(rid,txn,log_manager_);
     buffer_pool_manager_->UnpinPage(page->GetPageId(),true);
     InsertTuple(row,txn);
-    LOG(INFO) << "new RowID is "<< " page_id:"<<row.GetRowId().GetPageId()<<" solt_num:"<< row.GetRowId().GetSlotNum()<<std::endl;
+    // LOG(INFO) << "new RowID is "<< " page_id:"<<row.GetRowId().GetPageId()<<" solt_num:"<< row.GetRowId().GetSlotNum()<<std::endl;
     return true;
   }
 }
@@ -131,7 +133,7 @@ void TableHeap::ApplyDelete(const RowId &rid, Transaction *txn) {
   auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(rid.GetPageId()));
   if(page ==nullptr)
   {
-    LOG(WARNING) << "get page falsed when applydelete" << std::endl;
+    // LOG(WARNING) << "get page falsed when applydelete" << std::endl;
     return;
   }
   page ->ApplyDelete(rid,txn,log_manager_);
@@ -160,10 +162,10 @@ bool TableHeap::GetTuple(Row *row, Transaction *txn) {
   auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->FetchPage(row->GetRowId().GetPageId()));
   if(page == nullptr)
   {
-    LOG(WARNING) << "get nullptr when GetTuple" << std::endl;
+    // LOG(WARNING) << "get nullptr when GetTuple" << std::endl;
     return false;
   }
-  cout << "aaa"<< endl;
+  // cout << "aaa"<< endl;
   buffer_pool_manager_->UnpinPage(page->GetPageId(),false);
   if(page->GetTuple(row,schema_,txn,lock_manager_))
   return true;

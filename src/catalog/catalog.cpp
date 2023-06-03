@@ -70,7 +70,7 @@ CatalogMeta::CatalogMeta() {}
 CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManager *lock_manager,
                                LogManager *log_manager, bool init)
     : buffer_pool_manager_(buffer_pool_manager), lock_manager_(lock_manager), log_manager_(log_manager) {
-    std::cout <<"CatalogManager initialize:init is:"<<init<<"----------------" << std::endl;
+    // std::cout <<"CatalogManager initialize:init is:"<<init<<"----------------" << std::endl;
     if(init == true)
     {
       catalog_meta_ = CatalogMeta::NewInstance();
@@ -404,6 +404,7 @@ dberr_t CatalogManager::DropIndex(const string &table_name, const string &index_
   
   drop_index_info->GetIndex()->Destroy();
   buffer_pool_manager_->DeletePage(drop_page);
+  
   delete drop_index_info;
   FlushCatalogMetaPage();
   return DB_SUCCESS;

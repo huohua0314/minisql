@@ -39,9 +39,17 @@ void BPlusTree::Destroy(page_id_t current_page_id) {
   {
     return;
   }
+  
   auto b_page = reinterpret_cast<BPlusTreePage *>(buffer_pool_manager_->FetchPage(current_page_id)) ;
+  if(current_page_id==root_page_id_) 
+  {
+    UpdateRootPageId(-1) ;
+  }
+  buffer_pool_manager_->UnpinPage(b_page->GetPageId(),false);
+  buffer_pool_manager_->DeletePage(b_page->GetPageId());
   if(b_page->IsLeafPage())
   {
+    buffer_pool_manager_->UnpinPage(b_page->GetPageId(),false);
     buffer_pool_manager_->DeletePage(b_page->GetPageId());
     return;
   }
@@ -51,7 +59,7 @@ void BPlusTree::Destroy(page_id_t current_page_id) {
   {
     Destroy(i_page->ValueAt(i));
   }
-  buffer_pool_manager_->DeletePage(i_page->GetPageId());
+  
 }
 
 /*
@@ -303,7 +311,7 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
   if(node->IsRootPage())
   {
   #ifdef BTREE_DEBUG
-  LOG(WARNING) <<"END COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
+  LOG(WARNING) <<"END  on root COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
   #endif
     return AdjustRoot(node);
   }
@@ -313,7 +321,7 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
     auto parent = reinterpret_cast<InternalPage *>(buffer_pool_manager_->FetchPage(node->GetParentPageId()));
     int index = parent->ValueIndex(node->GetPageId());
     #ifdef BTREE_DEBUG
-    LOG(INFO) << "node:"<<node->GetPageId()<<" parent:" << node->GetParentPageId() <<" "<<parent->GetPageId()<<" Index:" << index <<std::endl;
+   LOG(INFO) << "node:"<<node->GetPageId()<<" parent:" << node->GetParentPageId() <<" "<<parent->GetPageId()<<" Index:" << index <<std::endl;
     #endif
     if(index == 0)
     {
@@ -332,9 +340,9 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
         Redistribute(sili_leaf,leaf,index);
         buffer_pool_manager_->UnpinPage(leaf->GetPageId(),true);
         buffer_pool_manager_->UnpinPage(sili_leaf->GetPageId(),true);
-  #ifdef BTREE_DEBUG
-  LOG(WARNING) <<"END COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
-  #endif
+        #ifdef BTREE_DEBUG
+          LOG(WARNING) <<"END COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
+        #endif
         return false;
       }
       else
@@ -343,13 +351,17 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
         flag = Coalesce(sili_leaf,leaf,parent,index,nullptr);
         if(flag)
         {
+          buffer_pool_manager_->UnpinPage(parent->GetPageId(),true);
           buffer_pool_manager_->DeletePage(parent->GetPageId());
         }
         else
         {
           buffer_pool_manager_->UnpinPage(parent->GetPageId(),true);
         }
-        return true;
+        if(index == 0)
+          return false;
+        else
+          return true;
       }
     }
     else
@@ -361,9 +373,9 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
         Redistribute(sili_internal,internal,index);
         buffer_pool_manager_->UnpinPage(internal->GetPageId(),true);
         buffer_pool_manager_->UnpinPage(sili_internal->GetPageId(),true);
-  #ifdef BTREE_DEBUG
-  LOG(WARNING) <<"END COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
-  #endif
+        #ifdef BTREE_DEBUG
+            LOG(WARNING) <<"END COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
+        #endif
         return false;
       }
       else
@@ -373,6 +385,7 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
       
         if(flag)
         {
+          buffer_pool_manager_->UnpinPage(parent->GetPageId(),true);
           buffer_pool_manager_->DeletePage(parent->GetPageId());
         }
         else
@@ -380,10 +393,13 @@ bool BPlusTree::CoalesceOrRedistribute(N *&node, Transaction *transaction) {
           buffer_pool_manager_->UnpinPage(parent->GetPageId(),true);
         }
       }
-  #ifdef BTREE_DEBUG
-  LOG(WARNING) <<"END COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
-  #endif
-      return true;
+      #ifdef BTREE_DEBUG
+        LOG(WARNING) <<"END COALESCEORREDISTRIBUTR-------------------------------"<<std::endl;
+      #endif
+      if(index == 0)
+        return false;
+      else
+        return true;
     }
   }
 }
@@ -411,6 +427,7 @@ bool BPlusTree::Coalesce(LeafPage *&neighbor_node, LeafPage *&node, InternalPage
     node->SetNextPageId(neighbor_node->GetNextPageId());
     parent->Remove(1);
     buffer_pool_manager_->UnpinPage(node->GetPageId(),true);
+    buffer_pool_manager_->UnpinPage(neighbor_node->GetPageId(),true);
     buffer_pool_manager_->DeletePage(neighbor_node->GetPageId());
   }
   else
@@ -419,6 +436,8 @@ bool BPlusTree::Coalesce(LeafPage *&neighbor_node, LeafPage *&node, InternalPage
     parent->Remove(index);
     neighbor_node->SetNextPageId(node->GetNextPageId());
     buffer_pool_manager_->UnpinPage(neighbor_node->GetPageId(),true);
+    buffer_pool_manager_->UnpinPage(node->GetPageId(),true);
+    buffer_pool_manager_->DeletePage(node->GetPageId());
   }
   if(parent->GetSize()<parent->GetMinSize())
   {
@@ -437,31 +456,41 @@ bool BPlusTree::Coalesce(InternalPage *&neighbor_node, InternalPage *&node, Inte
                          Transaction *transaction) {
   #ifdef BTREE_DEBUG
   LOG(WARNING) << "BEGIN COALESCE on internal ******************** index:"<<index <<std::endl;
+  LOG(WARNING) << "parent size before" << parent->GetSize() << std::endl;
   #endif
   ASSERT(neighbor_node->GetParentPageId()==node->GetParentPageId()&&parent->GetPageId()==node->GetParentPageId(),"parent not equal!");
   if(index == 0)
   {
     neighbor_node->MoveAllTo(node,parent->KeyAt(1),buffer_pool_manager_);
+     #ifdef BTREE_DEBUG
+    LOG(ERROR) << "parent key"<<parent->ValueAt(0)<<std::endl;
+    LOG(ERROR) <<"size:" << node->GetSize();
+    #endif
     parent->Remove(1) ;
     buffer_pool_manager_->UnpinPage(node->GetPageId(),true);
+    buffer_pool_manager_->UnpinPage(neighbor_node->GetPageId(),true);
     buffer_pool_manager_->DeletePage(neighbor_node->GetPageId());
+    // LOG(WARNING) << "current id" << node->GetPageId();
   }
   else
   {
     node->MoveAllTo(neighbor_node,parent->KeyAt(index),buffer_pool_manager_);
     parent->Remove(index);
     buffer_pool_manager_->UnpinPage(neighbor_node->GetPageId(),true);
+    buffer_pool_manager_->UnpinPage(node->GetPageId(),true);
     buffer_pool_manager_->DeletePage(node->GetPageId());
+    // LOG(WARNING) << "current id" << neighbor_node->GetPageId();
   }
   if(parent->GetSize()<parent->GetMinSize())
   {
     #ifdef BTREE_DEBUG
-  LOG(WARNING) << "end COALESCE********************" <<std::endl;
+  LOG(WARNING) << "end COALESCE******************** start parent" <<std::endl;
   #endif
     return CoalesceOrRedistribute(parent,nullptr);
   }
   #ifdef BTREE_DEBUG
   LOG(WARNING) << "end COALESCE********************" <<std::endl;
+ LOG(WARNING) << "parent size after" << parent->GetSize() << std::endl;
   #endif
     return false;
 }
@@ -534,6 +563,10 @@ bool BPlusTree::AdjustRoot(BPlusTreePage *old_root_node) {
   if(old_root_node->GetSize()==1&& !old_root_node->IsLeafPage())
   {
     auto child_page = reinterpret_cast<BPlusTreePage *>(buffer_pool_manager_->FetchPage(reinterpret_cast<InternalPage*>( old_root_node)->ValueAt(0)));
+    #ifdef BTREE_DEBUG
+      cout << "1"<<endl;
+      LOG(ERROR) << reinterpret_cast<BPlusTreePage *>(buffer_pool_manager_->FetchPage(reinterpret_cast<InternalPage*>( old_root_node)->ValueAt(0)));
+    #endif
     child_page->SetParentPageId(INVALID_PAGE_ID);
     root_page_id_ = child_page->GetPageId();
     buffer_pool_manager_->UnpinPage(child_page->GetPageId(),true);
@@ -542,6 +575,7 @@ bool BPlusTree::AdjustRoot(BPlusTreePage *old_root_node) {
   }
   else if(old_root_node->GetSize()==0&&old_root_node->IsLeafPage())
   {
+    // cout << "2"<<endl;
     root_page_id_ = INVALID_PAGE_ID;
     UpdateRootPageId(0);
     return true;
@@ -599,11 +633,13 @@ IndexIterator BPlusTree::End() {
  */
 Page *BPlusTree::FindLeafPage(const GenericKey *key, page_id_t new_page_id, bool leftMost) {
   #ifdef BTREE_DEBUG
-  LOG(INFO) <<"Begin FindLeafPage" <<std::endl;
+  LOG(INFO) <<"Begin FindLeafPage:" << new_page_id <<std::endl;
+  cout << "left moset:" << leftMost << std::endl;
   #endif
   page_id_t page_id = new_page_id;
   while(1)
     {
+      // LOG(WARNING) << "page_id" << page_id;
       auto page = reinterpret_cast<BPlusTreePage *>(buffer_pool_manager_->FetchPage(page_id));
       if(page->IsLeafPage())
       {
@@ -616,10 +652,15 @@ Page *BPlusTree::FindLeafPage(const GenericKey *key, page_id_t new_page_id, bool
       else
       {
         // cout << "test:"<<endl;
+        // LOG(INFO) <<"in page" << page->GetPageId();
         auto internal = reinterpret_cast<BPlusTreeInternalPage *> (page);
+        // LOG(ERROR) << "internal" << internal->GetPageId();
         buffer_pool_manager_->UnpinPage(page_id,false);
         if(!leftMost)
+        {
           page_id = internal->Lookup(key,processor_);
+          // LOG(WARNING) << "look up page_id" << page_id;
+        }
         else
           page_id = internal->ValueAt(0);
       }

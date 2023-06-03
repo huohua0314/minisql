@@ -59,7 +59,7 @@ int LeafPage::KeyIndex(const GenericKey *key, const KeyManager &KM) {
     if(KM.CompareKeys(KeyAt(i),key)>=0)
       return i;
   }
-  LOG(WARNING) << "could fund index" <<std::endl;
+  // LOG(WARNING) << "could fund index" <<std::endl;
   return -1;
 }
 
@@ -132,7 +132,7 @@ int LeafPage::Insert(GenericKey *key, const RowId &value, const KeyManager &KM) 
     }
     else
     {
-      LOG(WARNING) << "insert same value end of insert into leafpage--------" << std::endl;
+      // LOG(WARNING) << "insert same value end of insert into leafpage--------" << std::endl;
       return GetSize();
     }
   }
@@ -194,13 +194,13 @@ bool LeafPage::Lookup(const GenericKey *key, RowId &value, const KeyManager &KM)
     {
       value = ValueAt(i);
       #ifdef BTREE_DEBUG
-      LOG(WARNING) << "end loop up in leaf" << std::endl;
+      LOG(WARNING) << "end loop up in leaf success" << std::endl;
       #endif
       return true;
     }
   }
   #ifdef BTREE_DEBUG
-  LOG(WARNING) << "end loop up in leaf" << std::endl;
+  LOG(WARNING) << "end loop up in leaf false" << std::endl;
   #endif
     return false;
 }

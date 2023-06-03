@@ -114,7 +114,7 @@ class TableHeap {
           log_manager_(log_manager),
           lock_manager_(lock_manager) {
           auto page = reinterpret_cast<TablePage *>(buffer_pool_manager_->NewPage(first_page_id_));
-          LOG(INFO) << "first_page_id_id" << first_page_id_<<std::endl;
+          // LOG(INFO) << "first_page_id_id" << first_page_id_<<std::endl;
           ASSERT(first_page_id_!=INVALID_PAGE_ID,"first page get false");
           page->Init(first_page_id_,INVALID_PAGE_ID,log_manager_,nullptr);
           buffer_pool_manager_->UnpinPage(first_page_id_,true);

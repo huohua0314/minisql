@@ -74,12 +74,14 @@ page_id_t InternalPage::Lookup(const GenericKey *key, const KeyManager &KM) {
   int left = 1;
   int right = GetSize() - 1;
   GenericKey * temp;
+  #ifdef BTREE_DEBUG
+      LOG(INFO) <<"begin look up in InternalPage"<<std::endl<< "middle value:" << (left + right)/2<<" left:"<<left << " right:" << right<< std::endl;
+      LOG(ERROR) << "page_id" <<GetPageId() << std::endl;
+    #endif
   while(right>=left)
   {
     int middle = (left + right) /2;
-    #ifdef BTREE_DEBUG
-      LOG(INFO) <<"begin look up in InternalPage"<<std::endl<< "middle value:" << middle <<" left:"<<left << " right:" << right<< std::endl;
-    #endif
+    
     temp = KeyAt(middle) ;
     if(KM.CompareKeys(temp,key)>0)
     {
@@ -132,7 +134,7 @@ int InternalPage::InsertNodeAfter(const page_id_t &old_value, GenericKey *new_ke
   if(index==-1)
   {
     ASSERT(false,"InteranlPage out of size");
-    LOG(WARNING) << "Insert old value not found" << std::endl;
+    // LOG(WARNING) << "Insert old value not found" << std::endl;
   }
   else
   {
@@ -146,7 +148,7 @@ int InternalPage::InsertNodeAfter(const page_id_t &old_value, GenericKey *new_ke
     SetKeyAt(index+1,new_key);
     SetValueAt(index+1,new_value);
     IncreaseSize(1);
-    LOG(WARNING) << GetSize() <<std::endl;
+    // LOG(WARNING) << GetSize() <<std::endl;
     return GetSize();
   }
 }
