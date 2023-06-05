@@ -32,6 +32,7 @@ BPlusTree::BPlusTree(index_id_t index_id, BufferPoolManager *buffer_pool_manager
       auto head = reinterpret_cast<IndexRootsPage  *>(buffer_pool_manager_->FetchPage(INDEX_ROOTS_PAGE_ID));
       head->GetRootId(index_id_,&root_page_id_);
       buffer_pool_manager_->UnpinPage(INDEX_ROOTS_PAGE_ID,false);
+      this->Check();
 }
 
 void BPlusTree::Destroy(page_id_t current_page_id) {
@@ -117,6 +118,7 @@ bool BPlusTree::Insert(GenericKey *key, const RowId &value, Transaction *transac
   if(root_page_id_ == INVALID_PAGE_ID)
   {
     StartNewTree(key,value);
+     
     return true;
   }
 
@@ -142,7 +144,19 @@ void BPlusTree::StartNewTree(GenericKey *key, const RowId &value) {
   page->Insert(key,value,processor_) ;
   root_page_id_ = page_id;
   UpdateRootPageId(1);
+  if(this->Check())
+  {
+    cout << "yes";
+  }
+  else
+  cout<< "no";
   buffer_pool_manager_->UnpinPage(page_id,true);
+  if(this->Check())
+  {
+    cout << "yes";
+  }
+  else
+  cout<< "no";
 }
 
 /*
@@ -170,6 +184,7 @@ bool BPlusTree::InsertIntoLeaf(GenericKey *key, const RowId &value, Transaction 
     if(leaf->GetSize() <= leaf_max_size_)
     {
       buffer_pool_manager_->UnpinPage(leaf->GetPageId(),true);
+      ASSERT(this->Check(),"ss");
       return true;
     }
     auto new_node = Split(leaf,nullptr) ;
@@ -535,7 +550,9 @@ void BPlusTree::Redistribute(InternalPage *neighbor_node, InternalPage *node, in
   auto parent_page = reinterpret_cast<InternalPage *>(buffer_pool_manager_->FetchPage(node->GetParentPageId()));
   if(index!=0)
   {
+    GenericKey * temp= neighbor_node->KeyAt(neighbor_node->GetSize()-1);
     neighbor_node->MoveLastToFrontOf(node,parent_page->KeyAt(index),buffer_pool_manager_);
+    node->SetKeyAt(0,temp) ;
     parent_page->SetKeyAt(index,node->KeyAt(0));
     buffer_pool_manager_->UnpinPage(parent_page->GetPageId(),true);
   }
@@ -607,7 +624,7 @@ IndexIterator BPlusTree::Begin() {
 IndexIterator BPlusTree::Begin(const GenericKey *key) {
   auto page = reinterpret_cast<LeafPage *> (FindLeafPage(key,root_page_id_,false));
   int index = page->KeyIndex(key, processor_);
-  LOG(ERROR) <<"Index:" <<index <<std::endl;
+  // LOG(ERROR) <<"Index:" <<index <<std::endl;
   if(index==-1)
     return End();
   else

@@ -384,7 +384,7 @@ dberr_t ExecuteEngine::ExecuteShowTables(pSyntaxNode ast, ExecuteContext *contex
     DrawName(iter->GetTableName(),max_len);
     DrawUp(max_len);
   }
-
+  return DB_SUCCESS;
 }
 
 /**

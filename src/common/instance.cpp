@@ -13,7 +13,7 @@ DBStorageEngine::DBStorageEngine(std::string db_name, bool init, uint32_t buffer
   // Initialize components
   disk_mgr_ = new DiskManager(db_file_name_);
   bpm_ = new BufferPoolManager(buffer_pool_size, disk_mgr_);
-
+  bpm_->CheckAllUnpinned();
   // Allocate static page for db storage engine
   if (init) {
     page_id_t id;
@@ -32,8 +32,12 @@ DBStorageEngine::DBStorageEngine(std::string db_name, bool init, uint32_t buffer
     if (bpm_->IsPageFree(CATALOG_META_PAGE_ID) || bpm_->IsPageFree(INDEX_ROOTS_PAGE_ID)) {
       exit(1);
     }
+    bpm_->CheckAllUnpinned();
+    cout <<"dfsdf"<<std::endl;
     bpm_->UnpinPage(CATALOG_META_PAGE_ID, false);
     bpm_->UnpinPage(INDEX_ROOTS_PAGE_ID, false);
+    bpm_->CheckAllUnpinned();
+    cout <<"sdfsdfsdf"<<std::endl;
   } else {
     ASSERT(!bpm_->IsPageFree(CATALOG_META_PAGE_ID), "Invalid catalog meta page.");
     ASSERT(!bpm_->IsPageFree(INDEX_ROOTS_PAGE_ID), "Invalid header page.");

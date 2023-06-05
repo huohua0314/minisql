@@ -115,8 +115,8 @@ CatalogManager::CatalogManager(BufferPoolManager *buffer_pool_manager, LockManag
         index_names_[table_info->GetTableName()][index_meta->GetIndexName()] = index_meta->GetIndexId();
         buffer_pool_manager->UnpinPage(iter.second,false);
       }
+        buffer_pool_manager->UnpinPage(CATALOG_META_PAGE_ID,false);
     }
-    buffer_pool_manager->UnpinPage(CATALOG_META_PAGE_ID,false);
 }
 
 CatalogManager::~CatalogManager() {
